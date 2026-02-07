@@ -40,6 +40,7 @@ class ArducamConfig(BaseModel):
 
 class D435ifConfig(BaseModel):
     enabled: bool = False
+    serial: str | None = None
     width: int = 640
     height: int = 480
     fps: int = 30
@@ -47,6 +48,7 @@ class D435ifConfig(BaseModel):
 
 class D405Config(BaseModel):
     enabled: bool = False
+    serial: str | None = None
     width: int = 640
     height: int = 480
     fps: int = 15

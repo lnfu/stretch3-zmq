@@ -21,20 +21,22 @@ service:
 
 # Camera Settings
 arducam:
-  enabled: false
-  device: "/dev/video4"
+  enabled: true
+  device: "/dev/video6"  # Arducam OV9782 USB Camera
   width: 1280
   height: 720
   fps: 30
 
 d435if:
-  enabled: false
+  enabled: true
+  serial: "239722074251"  # D435I serial number
   width: 640
   height: 480
   fps: 30
 
 d405:
   enabled: false
+  serial: "218622277115"  # D405 serial number
   width: 640
   height: 480
   fps: 15

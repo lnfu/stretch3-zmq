@@ -22,6 +22,10 @@ def _setup_camera_logger():
     1. Re-enable the logger
     2. Add a handler since propagation doesn't work in daemon threads
     """
+    # Critical: Re-enable logger (stretch_body disables it)
+    logger.disabled = False
+
+    # Only add handler if none exists to avoid duplicates
     if not logger.handlers:
         handler = logging.StreamHandler(sys.stdout)
         handler.setLevel(logging.INFO)
@@ -29,9 +33,8 @@ def _setup_camera_logger():
         handler.setFormatter(formatter)
         logger.addHandler(handler)
         logger.setLevel(logging.INFO)
-
-    # Critical: Re-enable logger (stretch_body disables it)
-    logger.disabled = False
+        # Prevent propagation to avoid duplicate logs
+        logger.propagate = False
 
 
 def arducam_service(config: DriverConfig) -> NoReturn:
@@ -97,11 +100,9 @@ def _realsense_service(
 
             try:
                 while True:
-                    success, color_frame = camera.read_color()
+                    success, color_frame, depth_frame = camera.read_frames()
                     if success and color_frame is not None:
                         color_socket.send(color_frame.tobytes())
-
-                    success, depth_frame = camera.read_depth()
                     if success and depth_frame is not None:
                         depth_socket.send(depth_frame.tobytes())
             except KeyboardInterrupt:
@@ -120,6 +121,7 @@ def d435if_service(config: DriverConfig) -> NoReturn:
         width=config.d435if.width,
         height=config.d435if.height,
         fps=config.d435if.fps,
+        serial=config.d435if.serial,
     )
     _realsense_service(camera, config.ports.d435if_color, config.ports.d435if_depth, "D435i")
 
@@ -131,5 +133,6 @@ def d405_service(config: DriverConfig) -> NoReturn:
         width=config.d405.width,
         height=config.d405.height,
         fps=config.d405.fps,
+        serial=config.d405.serial,
     )
     _realsense_service(camera, config.ports.d405_color, config.ports.d405_depth, "D405")
