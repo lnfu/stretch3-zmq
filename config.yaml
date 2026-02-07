@@ -1,0 +1,43 @@
+# Stretch 3 Driver Configuration
+
+# ZeroMQ Ports
+ports:
+  status: 5555
+  command: 5556
+  arducam: 6000
+  d435if_color: 6001
+  d435if_depth: 6002
+  d405_color: 6003
+  d405_depth: 6004
+  tts: 6101
+  asr: 6102
+
+# Service Settings
+service:
+  status_rate_hz: 50.0
+  asr_timeout_seconds: 10.0
+  tts_provider: fish_audio
+  asr_provider: deepgram
+
+# Camera Settings
+arducam:
+  enabled: false
+  device: "/dev/video4"
+  width: 1280
+  height: 720
+  fps: 30
+
+d435if:
+  enabled: false
+  width: 640
+  height: 480
+  fps: 30
+
+d405:
+  enabled: false
+  width: 640
+  height: 480
+  fps: 15
+
+# Other Settings
+debug: false
