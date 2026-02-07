@@ -28,9 +28,13 @@ class ArducamCamera(CameraBase):
 
     def start(self) -> None:
         """Initialize and start the camera."""
+        # Re-enable logger (stretch_body disables it)
+        logger.disabled = False
+
         self._cap = cv2.VideoCapture(self._device)
 
         if not self._cap.isOpened():
+            logger.error(f"Failed to open Arducam at {self._device}")
             raise RuntimeError(f"Failed to open Arducam at {self._device}")
 
         # Set MJPG format for full FPS
@@ -42,6 +46,9 @@ class ArducamCamera(CameraBase):
         logger.info(
             f"Arducam started: {self._device} @ {self._width}x{self._height} {self._fps}fps"
         )
+        actual_w = self._cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+        actual_h = self._cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+        logger.info(f"Actual resolution: {actual_w}x{actual_h}")
 
     def stop(self) -> None:
         """Stop the camera and release resources."""

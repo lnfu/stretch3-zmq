@@ -20,6 +20,15 @@ from .services import (
 logger = logging.getLogger(__name__)
 
 
+def thread_exception_hook(args):
+    """Hook to catch uncaught exceptions in threads."""
+    logger.error(
+        f"Uncaught exception in thread {args.thread.name}: "
+        f"{args.exc_type.__name__}: {args.exc_value}",
+        exc_info=(args.exc_type, args.exc_value, args.exc_traceback),
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Stretch3-ZMQ Driver")
     parser.add_argument("--config", type=str, help="Path to config.yaml")
@@ -30,10 +39,8 @@ def main() -> None:
 
     load_dotenv()
 
-    logging.basicConfig(
-        level=logging.DEBUG if config.debug else logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    )
+    # Set up thread exception hook
+    threading.excepthook = thread_exception_hook
 
     logger.info("Starting Stretch3-ZMQ Driver...")
 
@@ -48,6 +55,24 @@ def main() -> None:
     except Exception as e:
         logger.error(f"Failed to initialize robot: {e}")
         return
+
+    # Reconfigure logging after stretch_body initialization
+    # stretch_body modifies the root logger, so we reconfigure it
+    root_logger = logging.getLogger()
+
+    # Remove all handlers that stretch_body added
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
+
+    # Add our own clean handler
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.DEBUG if config.debug else logging.INFO)
+    formatter = logging.Formatter("[%(levelname)s] [%(name)s]: %(message)s")
+    console_handler.setFormatter(formatter)
+    root_logger.addHandler(console_handler)
+    root_logger.setLevel(logging.DEBUG if config.debug else logging.INFO)
+
+    logger.info("Logging reconfigured after robot initialization")
 
     threads.append(
         threading.Thread(
@@ -120,6 +145,7 @@ def main() -> None:
         thread.start()
 
     logger.info("All services started successfully")
+
     logger.info(f"  - Status service: tcp://*:{config.ports.status} (PUB)")
     logger.info(f"  - Command service: tcp://*:{config.ports.command} (SUB)")
     logger.info(f"  - Speak service: tcp://*:{config.ports.tts} (PULL)")

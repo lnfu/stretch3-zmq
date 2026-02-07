@@ -23,6 +23,9 @@ class RealSenseCamera(CameraBase):
 
     def start(self) -> None:
         """Initialize and start the camera."""
+        # Re-enable logger (stretch_body disables it)
+        logger.disabled = False
+
         self._pipeline = rs.pipeline()
         self._config = rs.config()
 
