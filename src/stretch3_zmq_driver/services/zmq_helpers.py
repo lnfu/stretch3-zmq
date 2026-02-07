@@ -11,6 +11,13 @@ def zmq_socket(socket_type: int, address: str) -> Generator[zmq.Socket, None, No
     """Create a bound ZeroMQ socket with automatic cleanup."""
     context = zmq.Context()
     socket = context.socket(socket_type)
+
+    # Set HWM=1 for PUB/SUB sockets to keep only the latest message
+    if socket_type == zmq.PUB:
+        socket.setsockopt(zmq.SNDHWM, 1)
+    elif socket_type == zmq.SUB:
+        socket.setsockopt(zmq.RCVHWM, 1)
+
     socket.bind(address)
     try:
         yield socket
@@ -26,8 +33,10 @@ def zmq_socket_pair(
     """Create two bound PUB sockets sharing a context, with automatic cleanup."""
     context = zmq.Context()
     socket_a = context.socket(zmq.PUB)
+    socket_a.setsockopt(zmq.SNDHWM, 1)
     socket_a.bind(address_a)
     socket_b = context.socket(zmq.PUB)
+    socket_b.setsockopt(zmq.SNDHWM, 1)
     socket_b.bind(address_b)
     try:
         yield socket_a, socket_b
