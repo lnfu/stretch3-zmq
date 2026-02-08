@@ -2,8 +2,8 @@
 
 import pytest
 
-from stretch3_zmq_driver.asr.providers.base import PROVIDER_ENV_KEYS, ASRProvider
-from stretch3_zmq_driver.asr.service import ASRService, ProviderNotFoundError
+from stretch3_zmq.driver.asr.providers.base import PROVIDER_ENV_KEYS, ASRProvider
+from stretch3_zmq.driver.asr.service import ASRService, ProviderNotFoundError
 
 
 class TestASRService:

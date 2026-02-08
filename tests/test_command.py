@@ -5,7 +5,7 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from stretch3_zmq_core.messages.command import Command
+from stretch3_zmq.core.messages.command import Command
 
 
 class TestCommand:
