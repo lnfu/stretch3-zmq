@@ -6,7 +6,7 @@ import pytest
 import yaml
 from pydantic import ValidationError
 
-from stretch3_zmq_driver.config import DriverConfig
+from stretch3_zmq.driver.config import DriverConfig
 
 
 class TestDriverConfig:

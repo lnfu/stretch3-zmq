@@ -11,8 +11,8 @@ import cv2
 import numpy as np
 import zmq
 
-from stretch3_zmq_core.messages.command import Command
-from stretch3_zmq_core.messages.status import Status
+from stretch3_zmq.core.messages.command import Command
+from stretch3_zmq.core.messages.status import Status
 
 CAMERA_RECV_TIMEOUT_MS = 5000
 

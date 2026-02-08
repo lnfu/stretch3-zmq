@@ -5,7 +5,7 @@ from typing import NoReturn
 
 import zmq
 
-from stretch3_zmq_core.messages.command import Command
+from stretch3_zmq.core.messages.command import Command
 
 from ..config import DriverConfig
 from ..control.robot import StretchRobot
