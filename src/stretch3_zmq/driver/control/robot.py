@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 # Order matches JointName enum and Command.joint_positions indices
 _JOINT_COMMANDS: list[Callable[[stretch_body.robot.Robot, float], None]] = [
     lambda r, v: r.base.translate_by(v),
+    lambda r, v: r.base.rotate_by(v),
     lambda r, v: r.lift.move_to(v),
     lambda r, v: r.arm.move_to(v),
     lambda r, v: r.head.move_to("head_pan", v),
@@ -40,6 +41,7 @@ _JOINT_STATUS_READERS: list[
     ]
 ] = [
     (lambda s: s, "", "", ""),  # base_translate: always 0.0
+    (lambda s: s, "", "", ""),  # base_rotate: always 0.0
     (lambda s: s["lift"], "pos", "vel", "force"),
     (lambda s: s["arm"], "pos", "vel", "force"),
     (lambda s: s["head"]["head_pan"], "pos", "vel", "effort"),
@@ -75,7 +77,28 @@ class StretchRobot:
 
     def execute_command(self, command: Command) -> None:
         """Execute a joint position command on the robot."""
-        for cmd_fn, value in zip(_JOINT_COMMANDS, command.joint_positions, strict=True):
+
+        # TODO(lnfu): 目前先讓 command 允許 base rotate
+        # 因此需要檢查是否同時控制 base translate + base rotate (不允許)
+        # 未來如果要區分開 command & navigation, 或許就可以移除這部份 (同時移除 rotate)
+        base_translate = command.joint_positions[0]
+        base_rotate = command.joint_positions[1]
+
+        if base_translate != 0.0 and base_rotate != 0.0:
+            logger.warning(
+                f"Skipping command: both base_translate ({base_translate}) and "
+                f"base_rotate ({base_rotate}) are non-zero. Only one can be non-zero at a time."
+            )
+            return
+
+        for i, (cmd_fn, value) in enumerate(
+            zip(_JOINT_COMMANDS, command.joint_positions, strict=True)
+        ):
+            # TODO(lnfu): 這裡的判斷邏輯需要再想一下要不要移除
+            # Skip base_translate (i=0) and base_rotate (i=1) if their values are 0.0
+            # to avoid interfering with each other
+            if (i == 0 or i == 1) and value == 0.0:
+                continue
             cmd_fn(self._robot, value)
 
         self._robot.push_command()
@@ -138,8 +161,9 @@ class StretchRobot:
         efforts: list[float] = []
 
         for i, (extract, pos_key, vel_key, eff_key) in enumerate(_JOINT_STATUS_READERS):
-            if i == 0:
-                # base_translate: relative, no absolute position
+            if i == 0 or i == 1:
+                # base_translate and base_rotate: differential commands, no absolute position
+                # TODO(lnfu): 未來也許可以移除 base_rotate
                 positions.append(0.0)
                 velocities.append(0.0)
                 efforts.append(0.0)
