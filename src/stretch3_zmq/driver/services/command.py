@@ -6,6 +6,7 @@ from typing import NoReturn
 import zmq
 
 from stretch3_zmq.core.messages.command import Command
+from stretch3_zmq.core.messages.protocol import decode_with_timestamp
 
 from ..config import DriverConfig
 from ..control.robot import StretchRobot
@@ -28,10 +29,11 @@ def command_service(config: DriverConfig, robot: StretchRobot) -> NoReturn:
         try:
             while True:
                 try:
-                    msg = socket.recv()
-                    logger.debug(f"[COMMAND] Received {len(msg)} bytes")
+                    parts = socket.recv_multipart()
+                    timestamp_ns, payload = decode_with_timestamp(parts)
+                    logger.debug(f"[COMMAND] Received at {timestamp_ns}ns, {len(payload)} bytes")
 
-                    command = Command.from_bytes(msg)
+                    command = Command.from_bytes(payload)
                     robot.execute_command(command)
                     logger.info("[COMMAND] Command executed")
 

@@ -22,6 +22,10 @@ dependencies = [
     "pydantic-settings>=2.0.0",
     "pyyaml>=6.0",
     "pydantic>=2.12.5",
+    "ikpy>=3.4.2",
+    "graphviz>=0.21",
+    "urchin>=0.0.30",
+    "msgpack>=1.1.2",
 ]
 
 [project.optional-dependencies]

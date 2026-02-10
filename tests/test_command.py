@@ -1,7 +1,6 @@
 """Tests for Command data model serialization and validation."""
 
-import json
-
+import msgpack
 import pytest
 from pydantic import ValidationError
 
@@ -13,7 +12,6 @@ class TestCommand:
         positions = (0.0, 0.5, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0)
         cmd = Command(joint_positions=positions)
         assert cmd.joint_positions == positions
-        assert cmd.timestamp > 0
 
     def test_invalid_joint_count_raises(self) -> None:
         with pytest.raises(ValueError, match="Need 9 joint positions"):
@@ -36,12 +34,25 @@ class TestCommand:
         data = original.to_bytes()
         restored = Command.from_bytes(data)
         assert restored.joint_positions == original.joint_positions
-        assert restored.timestamp == original.timestamp
 
-    def test_from_bytes_invalid_json(self) -> None:
-        with pytest.raises((json.JSONDecodeError, ValidationError)):
-            Command.from_bytes(b"not json")
+    def test_from_bytes_invalid_msgpack(self) -> None:
+        with pytest.raises((msgpack.exceptions.ExtraData, msgpack.exceptions.UnpackException, ValidationError)):
+            Command.from_bytes(b"not msgpack")
 
     def test_from_bytes_missing_fields(self) -> None:
-        with pytest.raises((ValidationError, KeyError)):
-            Command.from_bytes(b'{"timestamp": 123}')
+        # Missing joint_positions field
+        with pytest.raises(ValidationError):
+            Command.from_bytes(msgpack.packb({}))
+
+    def test_msgpack_format(self) -> None:
+        """Verify messages are serialized with msgpack."""
+        positions = (0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0)
+        cmd = Command(joint_positions=positions)
+        data = cmd.to_bytes()
+
+        # Decode with msgpack and verify structure
+        unpacked = msgpack.unpackb(data)
+        assert "joint_positions" in unpacked
+        assert unpacked["joint_positions"] == list(positions)
+        # Timestamp should not be in the serialized data anymore
+        assert "timestamp" not in unpacked

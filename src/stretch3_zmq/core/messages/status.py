@@ -1,7 +1,5 @@
-import json
-import time
-
-from pydantic import BaseModel, Field
+import msgpack
+from pydantic import BaseModel
 
 from .constants import SKIP_VALIDATION
 from .orientation import Orientation
@@ -22,8 +20,6 @@ class IMU(BaseModel):
 
 
 class Status(BaseModel):
-    timestamp: int = Field(default_factory=time.time_ns)
-
     # Battery
     is_charging: bool
     is_low_voltage: bool
@@ -43,10 +39,10 @@ class Status(BaseModel):
     joint_efforts: tuple[float, ...]
 
     def to_bytes(self) -> bytes:
-        return self.model_dump_json().encode()
+        return msgpack.packb(self.model_dump())
 
     @classmethod
     def from_bytes(cls, data: bytes) -> "Status":
         if SKIP_VALIDATION:
-            return cls.model_construct(**json.loads(data))
-        return cls.model_validate_json(data)
+            return cls.model_construct(**msgpack.unpackb(data))
+        return cls.model_validate(msgpack.unpackb(data))

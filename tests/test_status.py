@@ -1,7 +1,6 @@
 """Tests for Status data model serialization."""
 
-import json
-
+import msgpack
 import pytest
 from pydantic import ValidationError
 
@@ -36,7 +35,6 @@ def _make_status() -> Status:
 class TestStatus:
     def test_create_status(self) -> None:
         status = _make_status()
-        assert status.timestamp > 0
         assert not status.is_charging
         assert not status.runstop
         assert len(status.joint_positions) == 9
@@ -51,12 +49,26 @@ class TestStatus:
         original = _make_status()
         data = original.to_bytes()
         restored = Status.from_bytes(data)
-        assert restored.timestamp == original.timestamp
         assert restored.is_charging == original.is_charging
         assert restored.joint_positions == original.joint_positions
         assert restored.odometry.pose.x == original.odometry.pose.x
         assert restored.imu.acceleration.z == original.imu.acceleration.z
 
-    def test_from_bytes_invalid_json(self) -> None:
-        with pytest.raises((json.JSONDecodeError, ValidationError)):
-            Status.from_bytes(b"not json")
+    def test_from_bytes_invalid_msgpack(self) -> None:
+        with pytest.raises((msgpack.exceptions.ExtraData, msgpack.exceptions.UnpackException, ValidationError)):
+            Status.from_bytes(b"not msgpack")
+
+    def test_msgpack_format(self) -> None:
+        """Verify Status is serialized with msgpack."""
+        status = _make_status()
+        data = status.to_bytes()
+
+        # Decode with msgpack and verify structure
+        unpacked = msgpack.unpackb(data)
+        assert "is_charging" in unpacked
+        assert "runstop" in unpacked
+        assert "joint_positions" in unpacked
+        assert "odometry" in unpacked
+        assert "imu" in unpacked
+        # Timestamp should not be in the serialized data anymore
+        assert "timestamp" not in unpacked

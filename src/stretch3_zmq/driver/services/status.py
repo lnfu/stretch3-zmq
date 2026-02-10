@@ -6,6 +6,8 @@ from typing import NoReturn
 
 import zmq
 
+from stretch3_zmq.core.messages.protocol import encode_with_timestamp
+
 from ..config import DriverConfig
 from ..control.robot import StretchRobot
 from .zmq_helpers import zmq_socket
@@ -30,7 +32,8 @@ def status_service(config: DriverConfig, robot: StretchRobot) -> NoReturn:
 
                 try:
                     status = robot.get_status()
-                    socket.send(status.to_bytes())
+                    parts = encode_with_timestamp(status.to_bytes())
+                    socket.send_multipart(parts)
                 except Exception as e:
                     logger.exception(f"[STATUS] Error getting/publishing status: {e}")
 

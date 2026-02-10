@@ -6,6 +6,8 @@ from typing import NoReturn
 
 import zmq
 
+from stretch3_zmq.core.messages.protocol import encode_with_timestamp
+
 from ..camera.arducam import ArducamCamera
 from ..camera.realsense import RealSenseCamera
 from ..config import DriverConfig
@@ -66,7 +68,8 @@ def arducam_service(config: DriverConfig) -> NoReturn:
                 while True:
                     success, frame = camera.read_color()
                     if success and frame is not None:
-                        socket.send(frame.tobytes())
+                        parts = encode_with_timestamp(frame.tobytes())
+                        socket.send_multipart(parts)
             except KeyboardInterrupt:
                 logger.info("Arducam shutting down...")
             finally:
@@ -102,9 +105,11 @@ def _realsense_service(
                 while True:
                     success, color_frame, depth_frame = camera.read_frames()
                     if success and color_frame is not None:
-                        color_socket.send(color_frame.tobytes())
+                        parts = encode_with_timestamp(color_frame.tobytes())
+                        color_socket.send_multipart(parts)
                     if success and depth_frame is not None:
-                        depth_socket.send(depth_frame.tobytes())
+                        parts = encode_with_timestamp(depth_frame.tobytes())
+                        depth_socket.send_multipart(parts)
             except KeyboardInterrupt:
                 logger.info(f"{name} shutting down...")
             finally:

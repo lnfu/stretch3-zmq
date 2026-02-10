@@ -6,12 +6,14 @@ camera windows close cleanly even if the server stops sending frames.
 """
 
 import argparse
+import time
 
 import cv2
 import numpy as np
 import zmq
 
 from stretch3_zmq.core.messages.command import Command
+from stretch3_zmq.core.messages.protocol import decode_with_timestamp, encode_with_timestamp
 from stretch3_zmq.core.messages.status import Status
 
 CAMERA_RECV_TIMEOUT_MS = 5000
@@ -47,7 +49,8 @@ def _stream_arducam(socket: zmq.Socket) -> None:
     try:
         while True:
             try:
-                raw = socket.recv()
+                parts = socket.recv_multipart()
+                timestamp_ns, raw = decode_with_timestamp(parts)
             except zmq.Again:
                 print("\nArducam: no frame received (timeout).")
                 break
@@ -72,8 +75,10 @@ def _stream_rgbd(
     try:
         while True:
             try:
-                color_raw = color_socket.recv()
-                depth_raw = depth_socket.recv()
+                color_parts = color_socket.recv_multipart()
+                depth_parts = depth_socket.recv_multipart()
+                timestamp_ns_color, color_raw = decode_with_timestamp(color_parts)
+                timestamp_ns_depth, depth_raw = decode_with_timestamp(depth_parts)
             except zmq.Again:
                 print(f"\n{name}: no frame received (timeout).")
                 break
@@ -131,7 +136,8 @@ def _handle_command(cmd_socket: zmq.Socket, args_str: str) -> None:
             print("No positions provided. Using default dummy positions.")
             positions = (0.0, 0.5, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0)
 
-        cmd_socket.send(Command(joint_positions=positions).to_bytes())
+        parts = encode_with_timestamp(Command(joint_positions=positions).to_bytes())
+        cmd_socket.send_multipart(parts)
         print(f"Sent command: {positions}\n")
     except ValueError as e:
         print(f"Invalid input: {e}")
@@ -145,10 +151,15 @@ def _handle_status(status_socket: zmq.Socket) -> None:
     print("Receiving status... (Ctrl+C to stop)")
     try:
         while True:
-            status = Status.from_bytes(status_socket.recv())
+            parts = status_socket.recv_multipart()
+            timestamp_ns, payload = decode_with_timestamp(parts)
+            status = Status.from_bytes(payload)
+
+            # Calculate message age for latency monitoring
+            age_ms = (time.time_ns() - timestamp_ns) / 1_000_000
             pos_str = ", ".join(f"{p:.2f}" for p in status.joint_positions)
             print(
-                f"\r[Status] pos=[{pos_str}] runstop={status.runstop}",
+                f"\r[Status] pos=[{pos_str}] runstop={status.runstop} age={age_ms:.1f}ms",
                 end="",
                 flush=True,
             )
