@@ -21,7 +21,7 @@ dependencies = [
     "hello-robot-stretch-body==0.7.29",
     "pydantic-settings>=2.0.0",
     "pyyaml>=6.0",
-    "pydantic>=2.12.5",
+    "pydantic==2.10.6",
     "ikpy>=3.4.2",
     "graphviz>=0.21",
     "urchin>=0.0.30",
