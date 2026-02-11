@@ -39,12 +39,10 @@ class RealSenseCamera(CameraBase):
             config.enable_device(self._serial)
 
         # Configure color and depth streams
-        config.enable_stream(
-            rs.stream.color, self._width, self._height, rs.format.rgb8, self._fps
-        )
-        config.enable_stream(
-            rs.stream.depth, self._width, self._height, rs.format.z16, self._fps
-        )
+        config.enable_stream(rs.stream.color, self._width, self._height, rs.format.rgb8, self._fps)
+        config.enable_stream(rs.stream.depth, self._width, self._height, rs.format.z16, self._fps)
+
+        self._align = rs.align(rs.stream.color)
 
         try:
             profile = pipeline.start(config)
@@ -78,10 +76,12 @@ class RealSenseCamera(CameraBase):
         if self._pipeline is None:
             return False, None, None
 
+        # TODO(lnfu): undistort (Inverse Brown-Conrady, Brown-Conrady, etc.)
         try:
             frames = self._pipeline.wait_for_frames(timeout_ms=1000)
-            color_frame = frames.get_color_frame()
-            depth_frame = frames.get_depth_frame()
+            aligned_frames = self._align.process(frames)
+            color_frame = aligned_frames.get_color_frame()
+            depth_frame = aligned_frames.get_depth_frame()
 
             if not color_frame or not depth_frame:
                 return False, None, None
