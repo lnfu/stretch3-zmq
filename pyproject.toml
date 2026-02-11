@@ -17,7 +17,6 @@ dependencies = [
     "dotenv>=0.9.9",
     "rich>=13.0.0",
     "scipy>=1.17.0",
-    "websockets>=16.0",
     "hello-robot-stretch-body==0.7.29",
     "pydantic-settings>=2.0.0",
     "pyyaml>=6.0",
@@ -26,6 +25,7 @@ dependencies = [
     "graphviz>=0.21",
     "urchin>=0.0.30",
     "msgpack>=1.1.2",
+    "websockets==12.0",
 ]
 
 [project.optional-dependencies]
