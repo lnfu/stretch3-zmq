@@ -71,7 +71,7 @@ class RealSenseCamera(CameraBase):
             self._pipeline = None
             logger.info(f"{self._name} stopped")
 
-    def read_frames(self) -> tuple[bool, np.ndarray | None, np.ndarray | None]:
+    def read(self) -> tuple[bool, np.ndarray | None, np.ndarray | None]:
         """Read color and depth frames from the camera."""
         if self._pipeline is None:
             return False, None, None
@@ -93,12 +93,3 @@ class RealSenseCamera(CameraBase):
             logger.exception(f"{self._name}: Failed to read frames")
             return False, None, None
 
-    def read_color(self) -> tuple[bool, np.ndarray | None]:
-        """Read a color frame from the camera."""
-        success, color, _ = self.read_frames()
-        return success, color
-
-    def read_depth(self) -> tuple[bool, np.ndarray | None]:
-        """Read a depth frame from the camera."""
-        success, _, depth = self.read_frames()
-        return success, depth

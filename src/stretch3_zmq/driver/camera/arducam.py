@@ -57,15 +57,13 @@ class ArducamCamera(CameraBase):
             self._cap = None
             logger.info("Arducam stopped")
 
-    def read_color(self) -> tuple[bool, np.ndarray | None]:
-        """Read a color frame from the camera."""
+    def read(self) -> tuple[bool, np.ndarray | None, np.ndarray | None]:
+        """Read a color frame from the camera (no depth support)."""
         if self._cap is None:
-            return False, None
+            return False, None, None
 
         ret, frame = self._cap.read()
         if not ret:
-            return False, None
+            return False, None, None
 
-        return True, frame
-
-    # read_depth() inherited from base - returns (False, None)
+        return True, frame, None

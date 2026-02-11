@@ -28,25 +28,16 @@ class CameraBase(ABC):
         pass
 
     @abstractmethod
-    def read_color(self) -> tuple[bool, np.ndarray | None]:
+    def read(self) -> tuple[bool, np.ndarray | None, np.ndarray | None]:
         """
-        Read a color frame from the camera.
+        Read color and depth frames from the camera.
 
         Returns:
-            Tuple of (success, frame). Frame is BGR format numpy array if success,
-            None otherwise.
+            Tuple of (success, color, depth). Color is an RGB/BGR numpy array,
+            depth is a uint16 depth array. Cameras without depth support return
+            None for the depth component.
         """
         pass
-
-    def read_depth(self) -> tuple[bool, np.ndarray | None]:
-        """
-        Read a depth frame from the camera.
-
-        Returns:
-            Tuple of (success, frame). Frame is uint16 depth array if success,
-            None otherwise. Returns (False, None) if camera doesn't support depth.
-        """
-        return False, None
 
     def __enter__(self):
         self.start()

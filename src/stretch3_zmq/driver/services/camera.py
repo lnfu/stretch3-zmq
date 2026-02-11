@@ -66,7 +66,7 @@ def arducam_service(config: DriverConfig) -> NoReturn:
 
             try:
                 while True:
-                    success, frame = camera.read_color()
+                    success, frame, _ = camera.read()
                     if success and frame is not None:
                         parts = encode_with_timestamp(frame.tobytes())
                         socket.send_multipart(parts)
@@ -103,7 +103,7 @@ def _realsense_service(
 
             try:
                 while True:
-                    success, color_frame, depth_frame = camera.read_frames()
+                    success, color_frame, depth_frame = camera.read()
                     if success and color_frame is not None:
                         parts = encode_with_timestamp(color_frame.tobytes())
                         color_socket.send_multipart(parts)

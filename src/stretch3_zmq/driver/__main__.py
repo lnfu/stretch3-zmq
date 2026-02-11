@@ -121,6 +121,7 @@ def main() -> None:
         )
 
     if config.d435if.enabled:
+        # TODO(lnfu): one port for rgb and depth (separate by topic)
         threads.append(
             threading.Thread(
                 target=d435if_service,
@@ -131,6 +132,7 @@ def main() -> None:
         )
 
     if config.d405.enabled:
+        # TODO(lnfu): one port for rgb and depth (separate by topic)
         threads.append(
             threading.Thread(
                 target=d405_service,
