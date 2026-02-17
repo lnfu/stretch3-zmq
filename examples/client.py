@@ -12,7 +12,8 @@ import cv2
 import numpy as np
 import zmq
 
-from stretch3_zmq.core.messages.command import Command
+from stretch3_zmq.core.messages.command import BaseCommand, ManipulatorCommand
+from stretch3_zmq.core.messages.pose_2d import Pose2D
 from stretch3_zmq.core.messages.protocol import decode_with_timestamp, encode_with_timestamp
 from stretch3_zmq.core.messages.status import Status
 
@@ -22,6 +23,7 @@ CAMERA_RECV_TIMEOUT_MS = 5000
 # ---------------------------------------------------------------------------
 # Camera helpers
 # ---------------------------------------------------------------------------
+
 
 def _show_rgbd_frame(
     window_name: str,
@@ -33,7 +35,11 @@ def _show_rgbd_frame(
     color = np.frombuffer(color_raw, np.uint8).reshape(480, 640, 3)
     depth = np.frombuffer(depth_raw, np.uint16).reshape(480, 640)
 
-    depth_vis = cv2.normalize(depth, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+    try:
+        depth_vis = cv2.normalize(depth, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+    except Exception:
+        depth_vis = np.zeros_like(depth, dtype=np.uint8)
+
     depth_cmap = cv2.applyColorMap(depth_vis, cv2.COLORMAP_JET)
 
     if rotate_code is not None:
@@ -54,7 +60,7 @@ def _stream_arducam(socket: zmq.Socket) -> None:
             except zmq.Again:
                 print("\nArducam: no frame received (timeout).")
                 break
-            frame = np.frombuffer(raw, np.uint8).reshape(720, 1280, 3)
+            frame = np.frombuffer(raw, np.uint8).reshape(800, 1280, 3)
             frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
             frame = cv2.flip(frame, 0)
             cv2.imshow("Arducam", frame)
@@ -93,6 +99,7 @@ def _stream_rgbd(
 # Socket setup
 # ---------------------------------------------------------------------------
 
+
 def _connect_sub(
     context: zmq.Context,
     address: str,
@@ -112,6 +119,7 @@ def _connect_sub(
 # ---------------------------------------------------------------------------
 # REPL command handlers
 # ---------------------------------------------------------------------------
+
 
 def _handle_tts(tts_socket: zmq.Socket, text: str) -> None:
     if text:
@@ -136,15 +144,43 @@ def _handle_command(cmd_socket: zmq.Socket, args_str: str) -> None:
             print("No positions provided. Using default dummy positions.")
             positions = (0.0, 0.5, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0)
 
-        parts = encode_with_timestamp(Command(joint_positions=positions).to_bytes())
+        parts = [b"manipulator"] + encode_with_timestamp(ManipulatorCommand(joint_positions=positions).to_bytes())
         cmd_socket.send_multipart(parts)
         print(f"Sent command: {positions}\n")
     except ValueError as e:
         print(f"Invalid input: {e}")
-        print("Usage: command <p0> <p1> ... <p8>")
-        print("Example: command 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9\n")
+        print("Usage: command <p0> <p1> ... <p9>")
+        print("Example: command 0.1 0.0 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9\n")
     except Exception as e:
         print(f"Error sending command: {e}\n")
+
+
+def _handle_base_command(cmd_socket: zmq.Socket, args_str: str) -> None:
+    try:
+        tokens = args_str.split()
+        if len(tokens) < 1:
+            print("Usage: base <x> [y] [theta] [velocity|position]")
+            print("Example: base 0.3 0.0 0.0 velocity\n")
+            return
+
+        mode = "velocity"
+        if tokens[-1] in ("velocity", "position"):
+            mode = tokens.pop()
+
+        floats = [float(t) for t in tokens]
+        x = floats[0] if len(floats) > 0 else 0.0
+        y = floats[1] if len(floats) > 1 else 0.0
+        theta = floats[2] if len(floats) > 2 else 0.0
+
+        command = BaseCommand(mode=mode, pose=Pose2D(x=x, y=y, theta=theta))
+        parts = [b"base"] + encode_with_timestamp(command.to_bytes())
+        cmd_socket.send_multipart(parts)
+        print(f"Sent base command: x={x} y={y} theta={theta} mode={mode}\n")
+    except ValueError as e:
+        print(f"Invalid input: {e}")
+        print("Usage: base <x> [y] [theta] [velocity|position]\n")
+    except Exception as e:
+        print(f"Error sending base command: {e}\n")
 
 
 def _handle_status(status_socket: zmq.Socket) -> None:
@@ -158,8 +194,10 @@ def _handle_status(status_socket: zmq.Socket) -> None:
             # Calculate message age for latency monitoring
             age_ms = (time.time_ns() - timestamp_ns) / 1_000_000
             pos_str = ", ".join(f"{p:.2f}" for p in status.joint_positions)
+            odom_str = f"{status.odometry.pose.x:.2f}, {status.odometry.pose.y:.2f}, {status.odometry.pose.theta:.2f}"
+            # pos=[{pos_str}]
             print(
-                f"\r[Status] pos=[{pos_str}] runstop={status.runstop} age={age_ms:.1f}ms",
+                f"\r[Status] odom=[{odom_str}] runstop={status.runstop} age={age_ms:.1f}ms",
                 end="",
                 flush=True,
             )
@@ -173,13 +211,14 @@ def _handle_status(status_socket: zmq.Socket) -> None:
 
 HELP_TEXT = """\
 Commands:
-  tts <text>             Send text to TTS
-  asr                    Start listening for speech
-  command <p0>...<p8>    Send robot command (9 joint positions)
-  status                 Subscribe to robot status (Ctrl+C to stop)
-  camera [camera_name]   Stream camera feed (press 'q' to stop)
-                         Options: arducam, d435if (default), d405
-  quit                   Exit
+  tts <text>                        Send text to TTS
+  asr                               Start listening for speech
+  command <p0>...<p9>               Send manipulator command (10 joint positions)
+  base <x> [y] [theta] [mode]       Send base command (mode: velocity|position)
+  status                            Subscribe to robot status (Ctrl+C to stop)
+  camera [camera_name]              Stream camera feed (press 'q' to stop)
+                                    Options: arducam, d435if (default), d405
+  quit                              Exit
 """
 
 
@@ -252,6 +291,8 @@ def main() -> None:
                 _handle_asr(asr_socket)
             elif cmd.startswith("command"):
                 _handle_command(cmd_socket, user_input[7:].strip())
+            elif cmd.startswith("base"):
+                _handle_base_command(cmd_socket, user_input[4:].strip())
             elif cmd == "status":
                 _handle_status(status_socket)
             elif cmd == "camera" or cmd.startswith("camera "):

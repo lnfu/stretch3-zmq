@@ -6,7 +6,14 @@ import pytest
 import yaml
 from pydantic import ValidationError
 
-from stretch3_zmq.driver.config import DriverConfig
+from stretch3_zmq.driver.config import (
+    ArducamConfig,
+    D405Config,
+    D435ifConfig,
+    DriverConfig,
+    PortsConfig,
+    ServiceConfig,
+)
 
 
 class TestDriverConfig:
@@ -60,3 +67,136 @@ class TestDriverConfig:
 
             with pytest.raises(ValidationError):
                 DriverConfig.from_yaml(f.name)
+
+
+class TestPortsConfig:
+    def test_all_defaults(self) -> None:
+        ports = PortsConfig()
+        assert ports.status == 5555
+        assert ports.command == 5556
+        assert ports.arducam == 6000
+        assert ports.d435if_color == 6001
+        assert ports.d435if_depth == 6002
+        assert ports.d405_color == 6003
+        assert ports.d405_depth == 6004
+        assert ports.tts == 6101
+        assert ports.asr == 6102
+
+    def test_custom_status_port(self) -> None:
+        ports = PortsConfig(status=9999)
+        assert ports.status == 9999
+        assert ports.command == 5556  # unchanged
+
+    def test_invalid_port_type_raises(self) -> None:
+        with pytest.raises(ValidationError):
+            PortsConfig(status="not_a_port")
+
+
+class TestServiceConfig:
+    def test_defaults(self) -> None:
+        svc = ServiceConfig()
+        assert svc.status_rate_hz == 50.0
+        assert svc.asr_timeout_seconds == 10.0
+        assert svc.tts_provider == "fish_audio"
+        assert svc.asr_provider == "deepgram"
+
+    def test_custom_rate(self) -> None:
+        svc = ServiceConfig(status_rate_hz=100.0)
+        assert svc.status_rate_hz == 100.0
+
+    def test_custom_providers(self) -> None:
+        svc = ServiceConfig(tts_provider="elevenlabs", asr_provider="openai")
+        assert svc.tts_provider == "elevenlabs"
+        assert svc.asr_provider == "openai"
+
+    def test_invalid_rate_type_raises(self) -> None:
+        with pytest.raises(ValidationError):
+            ServiceConfig(status_rate_hz="fast")
+
+
+class TestArducamConfig:
+    def test_defaults(self) -> None:
+        cam = ArducamConfig()
+        assert cam.enabled is False
+        assert cam.device == "/dev/video4"
+        assert cam.width == 1280
+        assert cam.height == 720
+        assert cam.fps == 30
+
+    def test_enable(self) -> None:
+        cam = ArducamConfig(enabled=True)
+        assert cam.enabled is True
+
+    def test_custom_device(self) -> None:
+        cam = ArducamConfig(device="/dev/video0")
+        assert cam.device == "/dev/video0"
+
+
+class TestD435ifConfig:
+    def test_defaults(self) -> None:
+        cam = D435ifConfig()
+        assert cam.enabled is False
+        assert cam.serial is None
+        assert cam.width == 640
+        assert cam.height == 480
+        assert cam.fps == 30
+
+    def test_with_serial(self) -> None:
+        cam = D435ifConfig(enabled=True, serial="123456789")
+        assert cam.enabled is True
+        assert cam.serial == "123456789"
+
+
+class TestD405Config:
+    def test_defaults(self) -> None:
+        cam = D405Config()
+        assert cam.enabled is False
+        assert cam.serial is None
+        assert cam.width == 640
+        assert cam.height == 480
+        assert cam.fps == 15
+
+    def test_with_serial(self) -> None:
+        cam = D405Config(enabled=True, serial="987654321")
+        assert cam.serial == "987654321"
+
+
+class TestDriverConfigFromYaml:
+    def test_camera_sections_loaded(self) -> None:
+        data = {
+            "arducam": {"enabled": True, "device": "/dev/video0"},
+            "d435if": {"enabled": True, "serial": "abc123"},
+            "d405": {"enabled": True, "fps": 10},
+        }
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+            yaml.dump(data, f)
+            f.flush()
+
+            config = DriverConfig.from_yaml(f.name)
+            assert config.arducam.enabled is True
+            assert config.arducam.device == "/dev/video0"
+            assert config.d435if.enabled is True
+            assert config.d435if.serial == "abc123"
+            assert config.d405.enabled is True
+            assert config.d405.fps == 10
+
+    def test_partial_ports_override(self) -> None:
+        data = {"ports": {"tts": 7000, "asr": 7001}}
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+            yaml.dump(data, f)
+            f.flush()
+
+            config = DriverConfig.from_yaml(f.name)
+            assert config.ports.tts == 7000
+            assert config.ports.asr == 7001
+            assert config.ports.status == 5555  # default unchanged
+
+    def test_service_section_loaded(self) -> None:
+        data = {"service": {"status_rate_hz": 25.0, "asr_timeout_seconds": 30.0}}
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
+            yaml.dump(data, f)
+            f.flush()
+
+            config = DriverConfig.from_yaml(f.name)
+            assert config.service.status_rate_hz == 25.0
+            assert config.service.asr_timeout_seconds == 30.0

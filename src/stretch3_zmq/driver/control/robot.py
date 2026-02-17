@@ -6,7 +6,7 @@ from collections.abc import Callable
 
 import stretch_body.robot
 
-from stretch3_zmq.core.messages.command import Command
+from stretch3_zmq.core.messages.command import BaseCommand, ManipulatorCommand
 from stretch3_zmq.core.messages.orientation import Orientation
 from stretch3_zmq.core.messages.pose_2d import Pose2D
 from stretch3_zmq.core.messages.status import IMU, Odometry, Status
@@ -75,7 +75,7 @@ class StretchRobot:
 
         logger.info("StretchRobot started successfully.")
 
-    def execute_command(self, command: Command) -> None:
+    def execute_manipulator_command(self, command: ManipulatorCommand) -> None:
         """Execute a joint position command on the robot."""
 
         # TODO(lnfu): 目前先讓 command 允許 base rotate
@@ -102,6 +102,10 @@ class StretchRobot:
             cmd_fn(self._robot, value)
 
         self._robot.push_command()
+
+    def execute_base_command(self, command: BaseCommand) -> None:
+        """Execute a base command on the robot."""
+        pass
 
     def stop(self) -> None:
         """Stop the robot motion."""

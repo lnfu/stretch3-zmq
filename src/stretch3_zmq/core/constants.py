@@ -1,9 +1,8 @@
-"""Shared constants for Command and Status data models."""
+"""Shared constants for ManipulatorCommand and Status data models."""
 
 import os
 from enum import StrEnum
 
-NUM_JOINTS = 10
 SKIP_VALIDATION = os.getenv("SKIP_VALIDATION", "0") == "1"
 
 

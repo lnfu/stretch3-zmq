@@ -1,7 +1,7 @@
 import msgpack
 from pydantic import BaseModel
 
-from .constants import SKIP_VALIDATION
+from ..constants import SKIP_VALIDATION
 from .orientation import Orientation
 from .pose_2d import Pose2D
 from .twist_2d import Twist2D
