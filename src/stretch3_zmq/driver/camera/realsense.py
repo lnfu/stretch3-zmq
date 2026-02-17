@@ -92,4 +92,3 @@ class RealSenseCamera(CameraBase):
         except Exception:
             logger.exception(f"{self._name}: Failed to read frames")
             return False, None, None
-
