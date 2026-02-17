@@ -7,7 +7,7 @@ import zmq
 
 
 @contextlib.contextmanager
-def zmq_socket(socket_type: int, address: str) -> Generator[zmq.Socket, None, None]:
+def zmq_socket(socket_type: int, address: str) -> Generator[zmq.Socket[bytes], None, None]:
     """Create a bound ZeroMQ socket with automatic cleanup."""
     context = zmq.Context()
     socket = context.socket(socket_type)
@@ -29,7 +29,7 @@ def zmq_socket(socket_type: int, address: str) -> Generator[zmq.Socket, None, No
 @contextlib.contextmanager
 def zmq_socket_pair(
     address_a: str, address_b: str
-) -> Generator[tuple[zmq.Socket, zmq.Socket], None, None]:
+) -> Generator[tuple[zmq.Socket[bytes], zmq.Socket[bytes]], None, None]:
     """Create two bound PUB sockets sharing a context, with automatic cleanup."""
     context = zmq.Context()
     socket_a = context.socket(zmq.PUB)

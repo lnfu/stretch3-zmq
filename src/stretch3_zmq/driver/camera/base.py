@@ -1,6 +1,7 @@
 """Abstract base class for camera implementations."""
 
 from abc import ABC, abstractmethod
+from typing import Self
 
 import numpy as np
 
@@ -39,9 +40,11 @@ class CameraBase(ABC):
         """
         pass
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         self.start()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: object
+    ) -> None:
         self.stop()

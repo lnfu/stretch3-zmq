@@ -20,12 +20,12 @@ from .services import (
 logger = logging.getLogger(__name__)
 
 
-def thread_exception_hook(args):
+def thread_exception_hook(args: threading.ExceptHookArgs) -> None:
     """Hook to catch uncaught exceptions in threads."""
+    thread_name = args.thread.name if args.thread is not None else "<unknown>"
     logger.error(
-        f"Uncaught exception in thread {args.thread.name}: "
-        f"{args.exc_type.__name__}: {args.exc_value}",
-        exc_info=(args.exc_type, args.exc_value, args.exc_traceback),
+        f"Uncaught exception in thread {thread_name}: {args.exc_type.__name__}: {args.exc_value}",
+        exc_info=args.exc_value,
     )
 
 

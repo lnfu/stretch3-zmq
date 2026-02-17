@@ -63,15 +63,16 @@ def test_network_byte_order() -> None:
     parts = encode_with_timestamp(payload)
 
     # Manually decode with network byte order
-    timestamp_ns = struct.unpack('!Q', parts[0])[0]
+    timestamp_ns = struct.unpack("!Q", parts[0])[0]
     assert timestamp_ns > 0
 
     # Verify the '!' prefix ensures big-endian
     # On little-endian systems, native byte order would give different result
     import sys
-    if sys.byteorder == 'little':
+
+    if sys.byteorder == "little":
         # Native byte order decoding should differ on little-endian
-        native_ts = struct.unpack('Q', parts[0])[0]
+        native_ts = struct.unpack("Q", parts[0])[0]
         # They'll only be equal if timestamp happens to be palindromic in binary
         # which is extremely unlikely, so we just verify both decode without error
         assert native_ts > 0

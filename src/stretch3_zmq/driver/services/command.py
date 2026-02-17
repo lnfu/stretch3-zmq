@@ -34,28 +34,22 @@ def command_service(config: DriverConfig, robot: StretchRobot) -> NoReturn:
 
         logger.info(f"Command service started. Listening on tcp://*:{config.ports.command}")
 
-        try:
-            while True:
-                try:
-                    parts = socket.recv_multipart()
-                    topic = parts[0].decode()
+        while True:
+            try:
+                parts = socket.recv_multipart()
+                topic = parts[0].decode()
 
-                    if topic not in dispatch:
-                        logger.warning(f"[COMMAND] Unknown topic: {topic!r}, ignoring")
-                        continue
+                if topic not in dispatch:
+                    logger.warning(f"[COMMAND] Unknown topic: {topic!r}, ignoring")
+                    continue
 
-                    timestamp_ns, payload = decode_with_timestamp(parts[1:])
-                    logger.debug(
-                        f"[COMMAND] topic={topic!r} at {timestamp_ns}ns, {len(payload)} bytes"
-                    )
+                timestamp_ns, payload = decode_with_timestamp(parts[1:])
+                logger.debug(f"[COMMAND] topic={topic!r} at {timestamp_ns}ns, {len(payload)} bytes")
 
-                    CommandClass, handler = dispatch[topic]
-                    command = CommandClass.from_bytes(payload)
-                    handler(command)
-                    logger.info(f"[COMMAND] {topic!r} command executed")
+                CommandClass, handler = dispatch[topic]
+                command = CommandClass.from_bytes(payload)
+                handler(command)
+                logger.info(f"[COMMAND] {topic!r} command executed")
 
-                except Exception as e:
-                    logger.exception(f"[COMMAND] Error processing command: {e}")
-
-        except KeyboardInterrupt:
-            logger.info("[COMMAND] Shutting down...")
+            except Exception as e:
+                logger.exception(f"[COMMAND] Error processing command: {e}")

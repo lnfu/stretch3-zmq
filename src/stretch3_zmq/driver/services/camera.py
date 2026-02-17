@@ -16,7 +16,7 @@ from .zmq_helpers import zmq_socket
 logger = logging.getLogger(__name__)
 
 
-def _setup_camera_logger():
+def _setup_camera_logger() -> None:
     """
     Set up camera service logger.
 
@@ -70,8 +70,6 @@ def arducam_service(config: DriverConfig) -> NoReturn:
                     if success and frame is not None:
                         parts = encode_with_timestamp(frame.tobytes())
                         socket.send_multipart(parts)
-            except KeyboardInterrupt:
-                logger.info("Arducam shutting down...")
             finally:
                 camera.stop()
     except Exception as e:
@@ -84,8 +82,8 @@ def _realsense_service(camera: RealSenseCamera, port: int, name: str) -> NoRetur
     RealSense service: Publishes color and depth frames to ZeroMQ.
 
     Publishes on tcp://*:{port} using topic-prefixed multipart messages:
-      [b"rgb",   timestamp, payload]  – color frame
-      [b"depth", timestamp, payload]  – depth frame
+      [b"rgb",   timestamp, payload] - color frame
+      [b"depth", timestamp, payload] - depth frame
     """
     try:
         _setup_camera_logger()
@@ -100,11 +98,13 @@ def _realsense_service(camera: RealSenseCamera, port: int, name: str) -> NoRetur
                 while True:
                     success, color_frame, depth_frame = camera.read()
                     if success and color_frame is not None:
-                        socket.send_multipart([b"rgb"] + encode_with_timestamp(color_frame.tobytes()))
+                        socket.send_multipart(
+                            [b"rgb", *encode_with_timestamp(color_frame.tobytes())]
+                        )
                     if success and depth_frame is not None:
-                        socket.send_multipart([b"depth"] + encode_with_timestamp(depth_frame.tobytes()))
-            except KeyboardInterrupt:
-                logger.info(f"{name} shutting down...")
+                        socket.send_multipart(
+                            [b"depth", *encode_with_timestamp(depth_frame.tobytes())]
+                        )
             finally:
                 camera.stop()
     except Exception as e:

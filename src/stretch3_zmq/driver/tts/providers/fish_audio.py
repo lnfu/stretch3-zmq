@@ -1,5 +1,7 @@
 """Fish Audio TTS provider using the v1 REST API."""
 
+from typing import Any
+
 import httpx
 
 from .base import BaseTTSProvider, TTSConfig, TTSProvider
@@ -26,7 +28,7 @@ class FishAudioProvider(BaseTTSProvider):
         """Get the format string for Fish Audio API. Fixed to PCM."""
         return "pcm"
 
-    def _build_request_body(self, text: str, config: TTSConfig) -> dict:
+    def _build_request_body(self, text: str, config: TTSConfig) -> dict[str, Any]:
         """Build the request body for the API call."""
         body = {
             "text": text,
@@ -49,7 +51,7 @@ class FishAudioProvider(BaseTTSProvider):
 
         return body
 
-    def _get_headers(self, model: str | None = None) -> dict:
+    def _get_headers(self, model: str | None = None) -> dict[str, str]:
         """Get request headers."""
         headers = {
             "Authorization": f"Bearer {self._api_key}",

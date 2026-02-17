@@ -26,22 +26,18 @@ def status_service(config: DriverConfig, robot: StretchRobot) -> NoReturn:
     with zmq_socket(zmq.PUB, f"tcp://*:{config.ports.status}") as socket:
         logger.info(f"Status service started. Publishing on tcp://*:{config.ports.status}")
 
-        try:
-            while True:
-                loop_start = time.time()
+        while True:
+            loop_start = time.time()
 
-                try:
-                    status = robot.get_status()
-                    parts = encode_with_timestamp(status.to_bytes())
-                    socket.send_multipart(parts)
-                except Exception as e:
-                    logger.exception(f"[STATUS] Error getting/publishing status: {e}")
+            try:
+                status = robot.get_status()
+                parts = encode_with_timestamp(status.to_bytes())
+                socket.send_multipart(parts)
+            except Exception as e:
+                logger.exception(f"[STATUS] Error getting/publishing status: {e}")
 
-                # Sleep to maintain rate
-                elapsed = time.time() - loop_start
-                sleep_time = status_interval - elapsed
-                if sleep_time > 0:
-                    time.sleep(sleep_time)
-
-        except KeyboardInterrupt:
-            logger.info("[STATUS] Shutting down...")
+            # Sleep to maintain rate
+            elapsed = time.time() - loop_start
+            sleep_time = status_interval - elapsed
+            if sleep_time > 0:
+                time.sleep(sleep_time)

@@ -1,3 +1,5 @@
+from typing import cast
+
 import msgpack
 from pydantic import BaseModel
 
@@ -39,7 +41,7 @@ class Status(BaseModel):
     joint_efforts: tuple[float, ...]
 
     def to_bytes(self) -> bytes:
-        return msgpack.packb(self.model_dump())
+        return cast(bytes, msgpack.packb(self.model_dump()))
 
     @classmethod
     def from_bytes(cls, data: bytes) -> "Status":

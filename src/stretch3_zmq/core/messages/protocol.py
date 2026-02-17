@@ -32,7 +32,7 @@ def encode_with_timestamp(payload: bytes) -> list[bytes]:
         8
     """
     timestamp_ns = time.time_ns()
-    timestamp_bytes = struct.pack('!Q', timestamp_ns)
+    timestamp_bytes = struct.pack("!Q", timestamp_ns)
     return [timestamp_bytes, payload]
 
 
@@ -61,6 +61,6 @@ def decode_with_timestamp(parts: list[bytes]) -> tuple[int, bytes]:
     if len(parts) != 2:
         raise ValueError(f"Expected 2 parts, got {len(parts)}")
 
-    timestamp_ns = struct.unpack('!Q', parts[0])[0]
+    timestamp_ns = struct.unpack("!Q", parts[0])[0]
     payload = parts[1]
     return timestamp_ns, payload

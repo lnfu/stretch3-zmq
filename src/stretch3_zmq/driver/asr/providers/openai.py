@@ -5,6 +5,7 @@ import json
 import logging
 
 import websockets
+from websockets.client import WebSocketClientProtocol
 
 from .base import ASRConfig, ASRProvider, BaseASRProvider
 
@@ -23,6 +24,12 @@ class OpenAIProvider(BaseASRProvider):
     WS_URL = "wss://api.openai.com/v1/realtime?intent=transcription"
 
     @property
+    def ws(self) -> WebSocketClientProtocol:
+        if self._ws is None:
+            raise RuntimeError("WebSocket not connected")
+        return self._ws
+
+    @property
     def provider_name(self) -> ASRProvider:
         return ASRProvider.OPENAI
 
@@ -37,7 +44,7 @@ class OpenAIProvider(BaseASRProvider):
         logger.info("OpenAI WebSocket connected")
 
         # Wait for session.created event
-        response = await self._ws.recv()
+        response = await self.ws.recv()
         event = json.loads(response)
         if event.get("type") != "session.created":
             raise RuntimeError(f"Unexpected event: {event}")
@@ -54,33 +61,30 @@ class OpenAIProvider(BaseASRProvider):
                 "turn_detection": {"type": self.TURN_DETECTION},
             },
         }
-        await self._ws.send(json.dumps(session_config))
+        await self.ws.send(json.dumps(session_config))
         logger.info("OpenAI session configured")
 
     async def send_audio(self, audio_chunk: bytes) -> None:
         """Send audio chunk as base64-encoded data."""
-        if not self._ws:
-            raise RuntimeError("WebSocket not connected")
 
         event = {
             "type": "input_audio_buffer.append",
             "audio": base64.b64encode(audio_chunk).decode("utf-8"),
         }
-        await self._ws.send(json.dumps(event))
+        await self.ws.send(json.dumps(event))
 
     async def receive_transcript(self) -> str | None:
         """Receive and parse transcription events."""
-        if not self._ws:
-            raise RuntimeError("WebSocket not connected")
 
         try:
-            response = await self._ws.recv()
+            response = await self.ws.recv()
             event = json.loads(response)
 
             event_type = event.get("type", "")
 
             if event_type == "conversation.item.input_audio_transcription.completed":
-                return event.get("transcript", "")
+                transcript = event.get("transcript", "")
+                return str(transcript)
             elif event_type == "conversation.item.input_audio_transcription.delta":
                 # Partial result, could be used for real-time display
                 return None

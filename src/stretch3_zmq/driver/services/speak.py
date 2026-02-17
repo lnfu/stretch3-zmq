@@ -44,18 +44,14 @@ def speak_service(config: DriverConfig) -> NoReturn:
     with zmq_socket(zmq.PULL, f"tcp://*:{config.ports.tts}") as socket:
         logger.info(f"Speak service started. Listening on tcp://*:{config.ports.tts}")
 
-        try:
-            while True:
-                text = socket.recv_string()
-                logger.info(f"[SPEAK] Received text: {text}")
+        while True:
+            text = socket.recv_string()
+            logger.info(f"[SPEAK] Received text: {text}")
 
-                if text.strip():
-                    try:
-                        audio_data = tts_service.convert(text, tts_config)
-                        play_audio(audio_data)
-                        logger.info("[SPEAK] Audio playback completed")
-                    except Exception as e:
-                        logger.exception(f"[SPEAK] Error converting text to speech: {e}")
-
-        except KeyboardInterrupt:
-            logger.info("[SPEAK] Shutting down...")
+            if text.strip():
+                try:
+                    audio_data = tts_service.convert(text, tts_config)
+                    play_audio(audio_data)
+                    logger.info("[SPEAK] Audio playback completed")
+                except Exception as e:
+                    logger.exception(f"[SPEAK] Error converting text to speech: {e}")

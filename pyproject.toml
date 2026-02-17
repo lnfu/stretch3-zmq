@@ -41,7 +41,9 @@ stretch3-zmq-driver = "stretch3_zmq.driver.__main__:main"
 
 [dependency-groups]
 dev = [
+    "prek>=0.3.3",
     "pytest>=9.0.2",
+    "types-pyyaml>=6.0.12.20250915",
 ]
 
 [tool.ruff]
@@ -61,7 +63,7 @@ warn_return_any = true
 warn_unused_configs = true
 
 [[tool.mypy.overrides]]
-module = ["stretch_body.*", "pyrealsense2.*", "cv2.*", "sounddevice.*"]
+module = ["stretch_body.*", "pyrealsense2.*", "cv2.*", "sounddevice.*", "msgpack.*", "scipy.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

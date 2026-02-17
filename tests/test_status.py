@@ -56,7 +56,9 @@ class TestStatus:
         assert restored.imu.acceleration.z == original.imu.acceleration.z
 
     def test_from_bytes_invalid_msgpack(self) -> None:
-        with pytest.raises((msgpack.exceptions.ExtraData, msgpack.exceptions.UnpackException, ValidationError)):
+        with pytest.raises(
+            (msgpack.exceptions.ExtraData, msgpack.exceptions.UnpackException, ValidationError)
+        ):
             Status.from_bytes(b"not msgpack")
 
     def test_msgpack_format(self) -> None:
@@ -114,9 +116,7 @@ class TestStatus:
         status = _make_status()
         assert status.to_bytes() == status.to_bytes()
 
-    def test_skip_validation_allows_incomplete_data(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_skip_validation_allows_incomplete_data(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """With SKIP_VALIDATION=True, from_bytes skips pydantic validation."""
         monkeypatch.setattr(status_module, "SKIP_VALIDATION", True)
         data = msgpack.packb({"is_charging": False})
@@ -124,9 +124,7 @@ class TestStatus:
         # model_construct does not set missing fields, so they're absent
         assert status.is_charging is False
 
-    def test_skip_validation_false_enforces_schema(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_skip_validation_false_enforces_schema(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(status_module, "SKIP_VALIDATION", False)
         data = msgpack.packb({"is_charging": False})
         with pytest.raises(ValidationError):

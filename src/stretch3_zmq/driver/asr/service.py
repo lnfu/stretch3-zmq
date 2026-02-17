@@ -3,7 +3,7 @@
 import asyncio
 import contextlib
 import logging
-from typing import ClassVar
+from typing import ClassVar, Self
 
 from .microphone import Microphone
 from .providers import (
@@ -103,10 +103,15 @@ class ASRService:
         """Close the WebSocket connection."""
         await self._provider.close()
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> Self:
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: object,
+    ) -> None:
         await self.close()
 
     async def transcribe_microphone(
@@ -133,7 +138,7 @@ class ASRService:
 
             mic.start()
 
-            async def send_audio_loop():
+            async def send_audio_loop() -> None:
                 while True:
                     chunk = mic.get_audio_chunk()
                     if chunk:

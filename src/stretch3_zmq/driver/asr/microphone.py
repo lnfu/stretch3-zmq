@@ -2,6 +2,7 @@
 
 import logging
 import queue
+from typing import Any, Self, cast
 
 import numpy as np
 import sounddevice as sd
@@ -27,13 +28,17 @@ class Microphone:
         mic.stop()
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._audio_queue: queue.Queue[bytes] = queue.Queue()
         self._stream: sd.InputStream | None = None
         self._device_id: int | None = None
 
     def _audio_callback(
-        self, indata: np.ndarray, frames: int, time_info: dict, status: sd.CallbackFlags | None
+        self,
+        indata: np.ndarray,
+        frames: int,
+        time_info: Any,
+        status: sd.CallbackFlags | None,
     ) -> None:
         """Callback for sounddevice InputStream."""
         if status:
@@ -58,10 +63,10 @@ class Microphone:
         respeaker = [d for d in hw_devices if "ReSpeaker" in d["name"]]
         if respeaker:
             logger.info(f"Using ReSpeaker: {respeaker[0]['name']}")
-            return respeaker[0]["index"]
+            return cast(int, respeaker[0]["index"])
 
         logger.info(f"Using input device: {hw_devices[0]['name']}")
-        return hw_devices[0]["index"]
+        return cast(int, hw_devices[0]["index"])
 
     def start(self) -> None:
         """Start recording from microphone."""
@@ -90,9 +95,14 @@ class Microphone:
         except queue.Empty:
             return None
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         self.start()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: object,
+    ) -> None:
         self.stop()

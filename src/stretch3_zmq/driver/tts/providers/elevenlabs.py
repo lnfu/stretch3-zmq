@@ -1,5 +1,7 @@
 """ElevenLabs TTS provider using the v1 REST API."""
 
+from typing import Any
+
 import httpx
 
 from .base import (
@@ -32,15 +34,15 @@ class ElevenLabsProvider(BaseTTSProvider):
     def provider_name(self) -> TTSProvider:
         return TTSProvider.ELEVENLABS
 
-    def _build_request_body(self, text: str, config: TTSConfig) -> dict:
+    def _build_request_body(self, text: str, config: TTSConfig) -> dict[str, Any]:
         """Build the request body for the API call."""
-        body = {
+        body: dict[str, Any] = {
             "text": text,
             "model_id": config.model_id or self.DEFAULT_MODEL_ID,
         }
 
         # Build voice settings with hardcoded ElevenLabs-specific values
-        voice_settings = {
+        voice_settings: dict[str, Any] = {
             "stability": self.STABILITY,
             "similarity_boost": self.SIMILARITY_BOOST,
             "style": self.STYLE,
@@ -54,7 +56,7 @@ class ElevenLabsProvider(BaseTTSProvider):
 
         return body
 
-    def _get_headers(self) -> dict:
+    def _get_headers(self) -> dict[str, str]:
         """Get request headers."""
         return {
             "xi-api-key": self._api_key,

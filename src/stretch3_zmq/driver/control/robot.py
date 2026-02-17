@@ -1,8 +1,8 @@
 """Low-level wrapper around stretch_body for joint position control."""
 
 import logging
-import time
 from collections.abc import Callable
+from typing import Any
 
 import stretch_body.robot
 
@@ -34,7 +34,7 @@ _JOINT_COMMANDS: list[Callable[[stretch_body.robot.Robot, float], None]] = [
 # Each entry defines how to extract position, velocity, and effort for a joint.
 _JOINT_STATUS_READERS: list[
     tuple[
-        Callable[[dict], dict],  # extract sub-dict
+        Callable[[dict[str, Any]], dict[str, Any]],  # extract sub-dict
         str,  # position key
         str,  # velocity key
         str,  # effort key
@@ -178,7 +178,6 @@ class StretchRobot:
                 efforts.append(float(joint[eff_key]))
 
         return Status(
-            timestamp=time.time_ns(),
             is_charging=is_charging,
             is_low_voltage=is_low_voltage,
             runstop=runstop,

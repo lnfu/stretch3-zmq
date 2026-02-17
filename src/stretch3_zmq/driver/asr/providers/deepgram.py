@@ -65,7 +65,7 @@ class DeepgramProvider(BaseASRProvider):
             if data.get("is_final"):
                 alternatives = data.get("channel", {}).get("alternatives", [{}])
                 if alternatives:
-                    return alternatives[0].get("transcript", "")
+                    return str(alternatives[0].get("transcript", ""))
 
         except websockets.exceptions.ConnectionClosed:
             logger.info("Deepgram WebSocket connection closed")

@@ -37,7 +37,9 @@ class TestManipulatorCommand:
         assert restored.joint_positions == original.joint_positions
 
     def test_from_bytes_invalid_msgpack(self) -> None:
-        with pytest.raises((msgpack.exceptions.ExtraData, msgpack.exceptions.UnpackException, ValidationError)):
+        with pytest.raises(
+            (msgpack.exceptions.ExtraData, msgpack.exceptions.UnpackException, ValidationError)
+        ):
             ManipulatorCommand.from_bytes(b"not msgpack")
 
     def test_from_bytes_missing_fields(self) -> None:

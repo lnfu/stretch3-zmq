@@ -1,0 +1,42 @@
+[[repos]]
+repo = "https://github.com/pre-commit/pre-commit-hooks"
+rev = "v6.0.0"
+hooks = [
+  { id = "trailing-whitespace" },
+  { id = "end-of-file-fixer" },
+  { id = "check-yaml" },
+  { id = "check-toml" },
+  { id = "check-json" },
+  { id = "check-merge-conflict" },
+  { id = "check-added-large-files" },
+  { id = "debug-statements" },
+  { id = "mixed-line-ending" },
+]
+
+[[repos]]
+repo = "https://github.com/astral-sh/ruff-pre-commit"
+rev = "v0.14.14"
+hooks = [
+  { id = "ruff-check", args = ["--fix"] },
+  { id = "ruff-format" },
+]
+
+[[repos]]
+repo = "https://github.com/pre-commit/mirrors-mypy"
+rev = "v1.19.1"
+hooks = [
+  { id = "mypy", additional_dependencies = ["types-PyYAML", "pydantic", "httpx"] },
+]
+
+[[repos]]
+repo = "https://github.com/gitleaks/gitleaks"
+rev = "v8.30.0"
+hooks = [
+  { id = "gitleaks" },
+]
+
+[[repos]]
+repo = "local"
+hooks = [
+  { id = "pytest", name = "pytest", entry = "uv run pytest", language = "system", pass_filenames = false, always_run = true },
+]

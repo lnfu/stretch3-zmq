@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, cast
 
 import msgpack
 from pydantic import BaseModel, field_validator
@@ -22,7 +22,7 @@ class ManipulatorCommand(BaseModel):
         return v
 
     def to_bytes(self) -> bytes:
-        return msgpack.packb(self.model_dump())
+        return cast(bytes, msgpack.packb(self.model_dump()))
 
     @classmethod
     def from_bytes(cls, data: bytes) -> "ManipulatorCommand":
@@ -36,7 +36,7 @@ class BaseCommand(BaseModel):
     pose: Pose2D
 
     def to_bytes(self) -> bytes:
-        return msgpack.packb(self.model_dump())
+        return cast(bytes, msgpack.packb(self.model_dump()))
 
     @classmethod
     def from_bytes(cls, data: bytes) -> "BaseCommand":

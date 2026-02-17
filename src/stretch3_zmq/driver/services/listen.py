@@ -46,20 +46,16 @@ def listen_service(config: DriverConfig) -> NoReturn:
                 asr_config, timeout=config.service.asr_timeout_seconds
             )
 
-        try:
-            while True:
-                request = socket.recv_string()
-                logger.info(f"[LISTEN] Received request: {request}")
+        while True:
+            request = socket.recv_string()
+            logger.info(f"[LISTEN] Received request: {request}")
 
-                try:
-                    transcript = asyncio.run(transcribe())
-                    logger.info(f"[LISTEN] Transcript: {transcript}")
-                except Exception as e:
-                    logger.exception(f"[LISTEN] Error during transcription: {e}")
-                    transcript = ""
+            try:
+                transcript = asyncio.run(transcribe())
+                logger.info(f"[LISTEN] Transcript: {transcript}")
+            except Exception as e:
+                logger.exception(f"[LISTEN] Error during transcription: {e}")
+                transcript = ""
 
-                socket.send_string(transcript)
-                logger.info(f"[LISTEN] Sent response: {transcript!r}")
-
-        except KeyboardInterrupt:
-            logger.info("[LISTEN] Shutting down...")
+            socket.send_string(transcript)
+            logger.info(f"[LISTEN] Sent response: {transcript!r}")

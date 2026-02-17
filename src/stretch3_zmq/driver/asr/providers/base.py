@@ -3,6 +3,10 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import TYPE_CHECKING, Self
+
+if TYPE_CHECKING:
+    from websockets.client import WebSocketClientProtocol
 
 
 class ASRProvider(StrEnum):
@@ -34,7 +38,7 @@ class BaseASRProvider(ABC):
 
     def __init__(self, api_key: str):
         self._api_key = api_key
-        self._ws = None
+        self._ws: WebSocketClientProtocol | None = None
 
     @property
     @abstractmethod
@@ -77,8 +81,10 @@ class BaseASRProvider(ABC):
         """Close the WebSocket connection."""
         pass
 
-    async def __aenter__(self):
+    async def __aenter__(self) -> Self:
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
+    async def __aexit__(
+        self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: object
+    ) -> None:
         await self.close()

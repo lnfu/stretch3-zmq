@@ -60,7 +60,7 @@ class ElevenLabsProvider(BaseASRProvider):
 
             # ElevenLabs sends committed_transcript for final results
             if "committed_transcript" in data:
-                return data["committed_transcript"]
+                return str(data["committed_transcript"])
             elif "partial_transcript" in data:
                 # Partial result, could be used for real-time display
                 return None

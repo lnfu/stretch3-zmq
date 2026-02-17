@@ -113,7 +113,8 @@ class TestOrientation:
 
     def test_missing_field_raises(self) -> None:
         with pytest.raises(ValidationError):
-            Orientation(roll=0.0, pitch=0.0)  # missing yaw
+            # missing yaw
+            Orientation(roll=0.0, pitch=0.0)
 
     def test_invalid_type_raises(self) -> None:
         with pytest.raises(ValidationError):
@@ -125,6 +126,7 @@ class TestOrientation:
 
     def test_full_rotation(self) -> None:
         import math
+
         o = Orientation(roll=math.pi, pitch=-math.pi / 2, yaw=2 * math.pi)
         assert abs(o.roll - math.pi) < 1e-9
 

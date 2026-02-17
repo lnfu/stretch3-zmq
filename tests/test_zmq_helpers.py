@@ -15,10 +15,10 @@ for _mod in ("stretch_body", "stretch_body.robot"):
     if _mod not in sys.modules:
         sys.modules[_mod] = MagicMock()
 
-import pytest
-import zmq
+import pytest  # noqa: E402
+import zmq  # noqa: E402
 
-from stretch3_zmq.driver.services.zmq_helpers import zmq_socket, zmq_socket_pair
+from stretch3_zmq.driver.services.zmq_helpers import zmq_socket, zmq_socket_pair  # noqa: E402
 
 # Use ports in a high range unlikely to conflict with running services.
 # Each test binds and immediately releases, so sequential reuse is safe.
@@ -58,10 +58,12 @@ class TestZmqSocket:
 
     def test_socket_closed_on_exception(self) -> None:
         socket_ref = None
-        with pytest.raises(RuntimeError):
-            with zmq_socket(zmq.PUB, f"tcp://127.0.0.1:{_BASE_PORT + 6}") as socket:
-                socket_ref = socket
-                raise RuntimeError("intentional error")
+        with (
+            pytest.raises(RuntimeError),
+            zmq_socket(zmq.PUB, f"tcp://127.0.0.1:{_BASE_PORT + 6}") as socket,
+        ):
+            socket_ref = socket
+            raise RuntimeError("intentional error")
         assert socket_ref is not None
         assert socket_ref.closed
 
@@ -104,13 +106,15 @@ class TestZmqSocketPair:
     def test_both_sockets_closed_on_exception(self) -> None:
         sock_a = None
         sock_b = None
-        with pytest.raises(ValueError):
-            with zmq_socket_pair(
+        with (
+            pytest.raises(ValueError),
+            zmq_socket_pair(
                 f"tcp://127.0.0.1:{_BASE_PORT + 16}",
                 f"tcp://127.0.0.1:{_BASE_PORT + 17}",
-            ) as (a, b):
-                sock_a, sock_b = a, b
-                raise ValueError("intentional error")
+            ) as (a, b),
+        ):
+            sock_a, sock_b = a, b
+            raise ValueError("intentional error")
         assert sock_a is not None and sock_a.closed
         assert sock_b is not None and sock_b.closed
 
