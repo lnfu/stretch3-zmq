@@ -15,10 +15,8 @@ class PortsConfig(BaseModel):
     status: int = 5555
     command: int = 5556
     arducam: int = 6000
-    d435if_color: int = 6001
-    d435if_depth: int = 6002
-    d405_color: int = 6003
-    d405_depth: int = 6004
+    d435if: int = 6001
+    d405: int = 6002
     tts: int = 6101
     asr: int = 6102
 

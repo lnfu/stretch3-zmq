@@ -5,10 +5,8 @@ ports:
   status: 5555
   command: 5556
   arducam: 6000
-  d435if_color: 6001
-  d435if_depth: 6002
-  d405_color: 6003
-  d405_depth: 6004
+  d435if: 6001
+  d405: 6002
   tts: 6101
   asr: 6102
 

@@ -11,7 +11,7 @@ from stretch3_zmq.core.messages.protocol import encode_with_timestamp
 from ..camera.arducam import ArducamCamera
 from ..camera.realsense import RealSenseCamera
 from ..config import DriverConfig
-from .zmq_helpers import zmq_socket, zmq_socket_pair
+from .zmq_helpers import zmq_socket
 
 logger = logging.getLogger(__name__)
 
@@ -79,13 +79,13 @@ def arducam_service(config: DriverConfig) -> NoReturn:
         raise
 
 
-def _realsense_service(
-    camera: RealSenseCamera, color_port: int, depth_port: int, name: str
-) -> NoReturn:
+def _realsense_service(camera: RealSenseCamera, port: int, name: str) -> NoReturn:
     """
     RealSense service: Publishes color and depth frames to ZeroMQ.
 
-    Publishes color on tcp://*:{color_port} and depth on tcp://*:{depth_port}.
+    Publishes on tcp://*:{port} using topic-prefixed multipart messages:
+      [b"rgb",   timestamp, payload]  – color frame
+      [b"depth", timestamp, payload]  – depth frame
     """
     try:
         _setup_camera_logger()
@@ -93,23 +93,16 @@ def _realsense_service(
         logger.info(f"{name} starting...")
         camera.start()
 
-        with zmq_socket_pair(f"tcp://*:{color_port}", f"tcp://*:{depth_port}") as (
-            color_socket,
-            depth_socket,
-        ):
-            logger.info(
-                f"{name} service started. Color: tcp://*:{color_port}, Depth: tcp://*:{depth_port}"
-            )
+        with zmq_socket(zmq.PUB, f"tcp://*:{port}") as socket:
+            logger.info(f"{name} service started. Publishing on tcp://*:{port}")
 
             try:
                 while True:
                     success, color_frame, depth_frame = camera.read()
                     if success and color_frame is not None:
-                        parts = encode_with_timestamp(color_frame.tobytes())
-                        color_socket.send_multipart(parts)
+                        socket.send_multipart([b"rgb"] + encode_with_timestamp(color_frame.tobytes()))
                     if success and depth_frame is not None:
-                        parts = encode_with_timestamp(depth_frame.tobytes())
-                        depth_socket.send_multipart(parts)
+                        socket.send_multipart([b"depth"] + encode_with_timestamp(depth_frame.tobytes()))
             except KeyboardInterrupt:
                 logger.info(f"{name} shutting down...")
             finally:
@@ -128,7 +121,7 @@ def d435if_service(config: DriverConfig) -> NoReturn:
         fps=config.d435if.fps,
         serial=config.d435if.serial,
     )
-    _realsense_service(camera, config.ports.d435if_color, config.ports.d435if_depth, "D435i")
+    _realsense_service(camera, config.ports.d435if, "D435i")
 
 
 def d405_service(config: DriverConfig) -> NoReturn:
@@ -140,4 +133,4 @@ def d405_service(config: DriverConfig) -> NoReturn:
         fps=config.d405.fps,
         serial=config.d405.serial,
     )
-    _realsense_service(camera, config.ports.d405_color, config.ports.d405_depth, "D405")
+    _realsense_service(camera, config.ports.d405, "D405")

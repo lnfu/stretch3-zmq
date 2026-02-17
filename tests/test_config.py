@@ -75,10 +75,8 @@ class TestPortsConfig:
         assert ports.status == 5555
         assert ports.command == 5556
         assert ports.arducam == 6000
-        assert ports.d435if_color == 6001
-        assert ports.d435if_depth == 6002
-        assert ports.d405_color == 6003
-        assert ports.d405_depth == 6004
+        assert ports.d435if == 6001
+        assert ports.d405 == 6002
         assert ports.tts == 6101
         assert ports.asr == 6102
 

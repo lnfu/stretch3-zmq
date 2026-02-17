@@ -72,25 +72,30 @@ def _stream_arducam(socket: zmq.Socket) -> None:
 
 def _stream_rgbd(
     name: str,
-    color_socket: zmq.Socket,
-    depth_socket: zmq.Socket,
+    socket: zmq.Socket,
     rotate_code: int | None = None,
 ) -> None:
-    """Stream an RGB-D camera pair with optional rotation."""
+    """Stream an RGB-D camera on a single socket, routing by topic (rgb/depth)."""
     print(f"Opening {name} (press 'q' to quit)...")
+    color_raw: bytes | None = None
+    depth_raw: bytes | None = None
     try:
         while True:
             try:
-                color_parts = color_socket.recv_multipart()
-                depth_parts = depth_socket.recv_multipart()
-                timestamp_ns_color, color_raw = decode_with_timestamp(color_parts)
-                timestamp_ns_depth, depth_raw = decode_with_timestamp(depth_parts)
+                parts = socket.recv_multipart()
             except zmq.Again:
                 print(f"\n{name}: no frame received (timeout).")
                 break
-            _show_rgbd_frame(name, color_raw, depth_raw, rotate_code)
-            if cv2.waitKey(1) & 0xFF == ord("q"):
-                break
+            topic = parts[0]
+            _, payload = decode_with_timestamp(parts[1:])
+            if topic == b"rgb":
+                color_raw = payload
+            elif topic == b"depth":
+                depth_raw = payload
+            if color_raw is not None and depth_raw is not None:
+                _show_rgbd_frame(name, color_raw, depth_raw, rotate_code)
+                if cv2.waitKey(1) & 0xFF == ord("q"):
+                    break
     finally:
         cv2.destroyAllWindows()
 
@@ -144,7 +149,9 @@ def _handle_command(cmd_socket: zmq.Socket, args_str: str) -> None:
             print("No positions provided. Using default dummy positions.")
             positions = (0.0, 0.5, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0)
 
-        parts = [b"manipulator"] + encode_with_timestamp(ManipulatorCommand(joint_positions=positions).to_bytes())
+        parts = [b"manipulator"] + encode_with_timestamp(
+            ManipulatorCommand(joint_positions=positions).to_bytes()
+        )
         cmd_socket.send_multipart(parts)
         print(f"Sent command: {positions}\n")
     except ValueError as e:
@@ -230,10 +237,8 @@ def main() -> None:
     parser.add_argument("--tts-port", type=int, default=6101, help="TTS port")
     parser.add_argument("--asr-port", type=int, default=6102, help="ASR port")
     parser.add_argument("--arducam-port", type=int, default=6000, help="Arducam port")
-    parser.add_argument("--d435if-color-port", type=int, default=6001, help="D435if color port")
-    parser.add_argument("--d435if-depth-port", type=int, default=6002, help="D435if depth port")
-    parser.add_argument("--d405-color-port", type=int, default=6003, help="D405 color port")
-    parser.add_argument("--d405-depth-port", type=int, default=6004, help="D405 depth port")
+    parser.add_argument("--d435if-port", type=int, default=6001, help="D435if port")
+    parser.add_argument("--d405-port", type=int, default=6002, help="D405 port")
     args = parser.parse_args()
 
     server_ip: str = args.server_ip
@@ -263,10 +268,8 @@ def main() -> None:
             )
 
         arducam_socket = cam_sub(args.arducam_port)
-        d435if_color = cam_sub(args.d435if_color_port)
-        d435if_depth = cam_sub(args.d435if_depth_port)
-        d405_color = cam_sub(args.d405_color_port)
-        d405_depth = cam_sub(args.d405_depth_port)
+        d435if_socket = cam_sub(args.d435if_port)
+        d405_socket = cam_sub(args.d405_port)
 
         print(f"Connected to {server_ip}")
         print(HELP_TEXT)
@@ -303,9 +306,9 @@ def main() -> None:
                 if camera_name == "arducam":
                     _stream_arducam(arducam_socket)
                 elif camera_name == "d435if":
-                    _stream_rgbd("D435if", d435if_color, d435if_depth, cv2.ROTATE_90_CLOCKWISE)
+                    _stream_rgbd("D435if", d435if_socket, cv2.ROTATE_90_CLOCKWISE)
                 elif camera_name == "d405":
-                    _stream_rgbd("D405", d405_color, d405_depth)
+                    _stream_rgbd("D405", d405_socket)
                 else:
                     print(f"Unknown camera: {camera_name}. Options: arducam, d435if, d405\n")
             else:
