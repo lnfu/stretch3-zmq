@@ -13,9 +13,17 @@ ports:
 # Service Settings
 service:
   status_rate_hz: 50.0
-  asr_timeout_seconds: 10.0
-  tts_provider: fish_audio
-  asr_provider: deepgram
+
+# TTS Settings
+tts:
+  enabled: true
+  provider: fish_audio
+
+# ASR Settings
+asr:
+  enabled: true
+  provider: deepgram
+  timeout_seconds: 10.0
 
 # Camera Settings
 arducam:
@@ -33,7 +41,7 @@ d435if:
   fps: 30
 
 d405:
-  enabled: false
+  enabled: true
   serial: "218622277115"  # D405 serial number
   width: 640
   height: 480

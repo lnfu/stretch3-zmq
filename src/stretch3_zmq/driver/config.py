@@ -23,9 +23,17 @@ class PortsConfig(BaseModel):
 
 class ServiceConfig(BaseModel):
     status_rate_hz: float = 50.0
-    asr_timeout_seconds: float = 10.0
-    tts_provider: str = "fish_audio"
-    asr_provider: str = "deepgram"
+
+
+class TTSConfig(BaseModel):
+    enabled: bool = True
+    provider: str = "fish_audio"
+
+
+class ASRConfig(BaseModel):
+    enabled: bool = True
+    provider: str = "deepgram"
+    timeout_seconds: float = 10.0
 
 
 class ArducamConfig(BaseModel):
@@ -55,6 +63,8 @@ class D405Config(BaseModel):
 class DriverConfig(BaseModel):
     ports: PortsConfig = PortsConfig()
     service: ServiceConfig = ServiceConfig()
+    tts: TTSConfig = TTSConfig()
+    asr: ASRConfig = ASRConfig()
     arducam: ArducamConfig = ArducamConfig()
     d435if: D435ifConfig = D435ifConfig()
     d405: D405Config = D405Config()

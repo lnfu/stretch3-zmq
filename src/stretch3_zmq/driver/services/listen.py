@@ -22,7 +22,7 @@ def listen_service(config: DriverConfig) -> NoReturn:
     Listens on tcp://*:{ports.asr} using REP socket pattern.
     When a request is received, starts listening for speech and returns transcript.
     """
-    provider = ASRProvider(config.service.asr_provider)
+    provider = ASRProvider(config.asr.provider)
     env_key = PROVIDER_ENV_KEYS[provider]
     api_key = os.getenv(env_key)
 
@@ -43,7 +43,7 @@ def listen_service(config: DriverConfig) -> NoReturn:
                 api_key=api_key,
             )
             return await service.transcribe_microphone(
-                asr_config, timeout=config.service.asr_timeout_seconds
+                asr_config, timeout=config.asr.timeout_seconds
             )
 
         while True:

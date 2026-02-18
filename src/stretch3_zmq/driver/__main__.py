@@ -91,23 +91,26 @@ def main() -> None:
         )
     )
 
-    # TTS/ASR services
-    threads.append(
-        threading.Thread(
-            target=speak_service,
-            name="SpeakService",
-            daemon=True,
-            args=(config,),
+    # TTS/ASR services (only if enabled)
+    if config.tts.enabled:
+        threads.append(
+            threading.Thread(
+                target=speak_service,
+                name="SpeakService",
+                daemon=True,
+                args=(config,),
+            )
         )
-    )
-    threads.append(
-        threading.Thread(
-            target=listen_service,
-            name="ListenService",
-            daemon=True,
-            args=(config,),
+
+    if config.asr.enabled:
+        threads.append(
+            threading.Thread(
+                target=listen_service,
+                name="ListenService",
+                daemon=True,
+                args=(config,),
+            )
         )
-    )
 
     # Camera services (only if enabled)
     if config.arducam.enabled:
@@ -148,8 +151,10 @@ def main() -> None:
 
     logger.info(f"  - Status service: tcp://*:{config.ports.status} (PUB)")
     logger.info(f"  - Command service: tcp://*:{config.ports.command} (SUB)")
-    logger.info(f"  - Speak service: tcp://*:{config.ports.tts} (PULL)")
-    logger.info(f"  - Listen service: tcp://*:{config.ports.asr} (REP)")
+    if config.tts.enabled:
+        logger.info(f"  - Speak service: tcp://*:{config.ports.tts} (PULL)")
+    if config.asr.enabled:
+        logger.info(f"  - Listen service: tcp://*:{config.ports.asr} (REP)")
     if config.arducam.enabled:
         logger.info(f"  - Arducam service: tcp://*:{config.ports.arducam} (PUB)")
     if config.d435if.enabled:

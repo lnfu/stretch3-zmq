@@ -21,7 +21,7 @@ def speak_service(config: DriverConfig) -> NoReturn:
 
     Listens on tcp://*:{ports.tts} using PULL socket pattern.
     """
-    provider = TTSProvider(config.service.tts_provider)
+    provider = TTSProvider(config.tts.provider)
     env_key = PROVIDER_ENV_KEYS[provider]
     api_key = os.getenv(env_key)
 

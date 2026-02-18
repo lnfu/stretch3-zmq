@@ -8,11 +8,13 @@ from pydantic import ValidationError
 
 from stretch3_zmq.driver.config import (
     ArducamConfig,
+    ASRConfig,
     D405Config,
     D435ifConfig,
     DriverConfig,
     PortsConfig,
     ServiceConfig,
+    TTSConfig,
 )
 
 
@@ -22,8 +24,8 @@ class TestDriverConfig:
         assert config.ports.status == 5555
         assert config.ports.command == 5556
         assert config.service.status_rate_hz == 50.0
-        assert config.service.tts_provider == "fish_audio"
-        assert config.service.asr_provider == "deepgram"
+        assert config.tts.provider == "fish_audio"
+        assert config.asr.provider == "deepgram"
         assert not config.debug
 
     def test_from_yaml_none_returns_default(self) -> None:
@@ -37,7 +39,7 @@ class TestDriverConfig:
     def test_from_yaml_valid_file(self) -> None:
         data = {
             "ports": {"status": 9999},
-            "service": {"tts_provider": "elevenlabs"},
+            "tts": {"provider": "elevenlabs"},
             "debug": True,
         }
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
@@ -46,7 +48,7 @@ class TestDriverConfig:
 
             config = DriverConfig.from_yaml(f.name)
             assert config.ports.status == 9999
-            assert config.service.tts_provider == "elevenlabs"
+            assert config.tts.provider == "elevenlabs"
             assert config.debug is True
             # Unspecified fields should use defaults
             assert config.ports.command == 5556
@@ -87,29 +89,53 @@ class TestPortsConfig:
 
     def test_invalid_port_type_raises(self) -> None:
         with pytest.raises(ValidationError):
-            PortsConfig(status="not_a_port")
+            PortsConfig(status="not_a_port")  # type: ignore[arg-type]
 
 
 class TestServiceConfig:
     def test_defaults(self) -> None:
         svc = ServiceConfig()
         assert svc.status_rate_hz == 50.0
-        assert svc.asr_timeout_seconds == 10.0
-        assert svc.tts_provider == "fish_audio"
-        assert svc.asr_provider == "deepgram"
 
     def test_custom_rate(self) -> None:
         svc = ServiceConfig(status_rate_hz=100.0)
         assert svc.status_rate_hz == 100.0
 
-    def test_custom_providers(self) -> None:
-        svc = ServiceConfig(tts_provider="elevenlabs", asr_provider="openai")
-        assert svc.tts_provider == "elevenlabs"
-        assert svc.asr_provider == "openai"
-
     def test_invalid_rate_type_raises(self) -> None:
         with pytest.raises(ValidationError):
-            ServiceConfig(status_rate_hz="fast")
+            ServiceConfig(status_rate_hz="fast")  # type: ignore[arg-type]
+
+
+class TestTTSConfig:
+    def test_defaults(self) -> None:
+        tts = TTSConfig()
+        assert tts.enabled is True
+        assert tts.provider == "fish_audio"
+
+    def test_disabled(self) -> None:
+        tts = TTSConfig(enabled=False)
+        assert tts.enabled is False
+
+    def test_custom_provider(self) -> None:
+        tts = TTSConfig(provider="elevenlabs")
+        assert tts.provider == "elevenlabs"
+
+
+class TestASRConfig:
+    def test_defaults(self) -> None:
+        asr = ASRConfig()
+        assert asr.enabled is True
+        assert asr.provider == "deepgram"
+        assert asr.timeout_seconds == 10.0
+
+    def test_disabled(self) -> None:
+        asr = ASRConfig(enabled=False)
+        assert asr.enabled is False
+
+    def test_custom_provider_and_timeout(self) -> None:
+        asr = ASRConfig(provider="openai", timeout_seconds=30.0)
+        assert asr.provider == "openai"
+        assert asr.timeout_seconds == 30.0
 
 
 class TestArducamConfig:
@@ -190,11 +216,14 @@ class TestDriverConfigFromYaml:
             assert config.ports.status == 5555  # default unchanged
 
     def test_service_section_loaded(self) -> None:
-        data = {"service": {"status_rate_hz": 25.0, "asr_timeout_seconds": 30.0}}
+        data = {
+            "service": {"status_rate_hz": 25.0},
+            "asr": {"timeout_seconds": 30.0},
+        }
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             yaml.dump(data, f)
             f.flush()
 
             config = DriverConfig.from_yaml(f.name)
             assert config.service.status_rate_hz == 25.0
-            assert config.service.asr_timeout_seconds == 30.0
+            assert config.asr.timeout_seconds == 30.0
