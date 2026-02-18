@@ -17,7 +17,21 @@ Setup
 Run
 ---
 
-On Stretch 3:
+.. note::
+
+   The ``main`` branch is unstable (trunk-based development). Use a specific tagged
+   version for production use.
+
+On Stretch 3, install and run directly with ``uvx``.
+
+Recommended — specific version (e.g., ``v0.0.2``):
+
+.. code-block:: bash
+
+    set -a; source .env; set +a  # Only needed if using TTS/ASR
+    uvx --python 3.12 --from "git+https://github.com/lnfu/stretch3-zmq.git@v0.0.2" stretch3-zmq-driver
+
+Latest (unstable main branch):
 
 .. code-block:: bash
 
