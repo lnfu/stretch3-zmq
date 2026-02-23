@@ -21,6 +21,13 @@ class RealSenseCamera(CameraBase):
         self._fps = fps
         self._serial = serial
         self._pipeline: rs.pipeline | None = None
+        self._depth_scale: float | None = None
+
+    @property
+    def depth_scale(self) -> float:
+        if self._depth_scale is None:
+            raise RuntimeError(f"{self._name}: Camera not started")
+        return self._depth_scale
 
     def start(self) -> None:
         """Initialize and start the camera."""
@@ -46,13 +53,15 @@ class RealSenseCamera(CameraBase):
 
         try:
             profile = pipeline.start(config)
+            depth_sensor = profile.get_device().first_depth_sensor()
+            self._depth_scale = depth_sensor.get_depth_scale()  # Unit: meters per unit
             device = profile.get_device()
             device_serial = device.get_info(rs.camera_info.serial_number)
             self._pipeline = pipeline
 
             logger.info(
                 f"{self._name} started: {self._width}x{self._height} @ {self._fps}fps "
-                f"(Serial: {device_serial})"
+                f"(Serial: {device_serial}, Depth Scale (m/unit): {self._depth_scale:.6f})"
             )
 
             # Drop first few frames to let camera stabilize
