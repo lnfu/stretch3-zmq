@@ -9,6 +9,19 @@ resolution-markers = [
     "(platform_machine != 'aarch64' and sys_platform == 'linux') or (sys_platform != 'darwin' and sys_platform != 'emscripten' and sys_platform != 'linux' and sys_platform != 'win32')",
 ]
 
+[manifest]
+members = [
+    "stretch3-zmq-core",
+    "stretch3-zmq-driver",
+]
+
+[manifest.dependency-groups]
+dev = [
+    { name = "prek", specifier = ">=0.3.3" },
+    { name = "pytest", specifier = ">=9.0.2" },
+    { name = "types-pyyaml", specifier = ">=6.0.12.20250915" },
+]
+
 [[package]]
 name = "addict"
 version = "2.4.0"
@@ -2503,27 +2516,12 @@ wheels = [
 ]
 
 [[package]]
-name = "stretch3-zmq"
+name = "stretch3-zmq-core"
 version = "0.0.3"
-source = { editable = "." }
+source = { editable = "packages/core" }
 dependencies = [
-    { name = "dotenv" },
-    { name = "elevenlabs" },
-    { name = "graphviz" },
-    { name = "hello-robot-stretch-body" },
-    { name = "ikpy" },
     { name = "msgpack" },
-    { name = "numpy" },
-    { name = "opencv-python" },
     { name = "pydantic" },
-    { name = "pydantic-settings" },
-    { name = "pyyaml" },
-    { name = "pyzmq" },
-    { name = "rich" },
-    { name = "scipy" },
-    { name = "sounddevice" },
-    { name = "urchin" },
-    { name = "websockets" },
 ]
 
 [package.optional-dependencies]
@@ -2533,11 +2531,37 @@ dev = [
     { name = "ruff" },
 ]
 
-[package.dev-dependencies]
-dev = [
-    { name = "prek" },
-    { name = "pytest" },
-    { name = "types-pyyaml" },
+[package.metadata]
+requires-dist = [
+    { name = "msgpack", specifier = ">=1.1.2" },
+    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.10" },
+    { name = "pydantic", specifier = "==2.10.6" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.4" },
+]
+provides-extras = ["dev"]
+
+[[package]]
+name = "stretch3-zmq-driver"
+version = "0.0.3"
+source = { editable = "packages/driver" }
+dependencies = [
+    { name = "dotenv" },
+    { name = "elevenlabs" },
+    { name = "graphviz" },
+    { name = "hello-robot-stretch-body" },
+    { name = "ikpy" },
+    { name = "numpy" },
+    { name = "opencv-python" },
+    { name = "pydantic-settings" },
+    { name = "pyyaml" },
+    { name = "pyzmq" },
+    { name = "rich" },
+    { name = "scipy" },
+    { name = "sounddevice" },
+    { name = "stretch3-zmq-core" },
+    { name = "urchin" },
+    { name = "websockets" },
 ]
 
 [package.metadata]
@@ -2547,29 +2571,17 @@ requires-dist = [
     { name = "graphviz", specifier = ">=0.21" },
     { name = "hello-robot-stretch-body", specifier = "==0.7.29" },
     { name = "ikpy", specifier = ">=3.4.2" },
-    { name = "msgpack", specifier = ">=1.1.2" },
-    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.10" },
     { name = "numpy", specifier = ">=1.24.0" },
     { name = "opencv-python", specifier = ">=4.8,<4.13" },
-    { name = "pydantic", specifier = "==2.10.6" },
     { name = "pydantic-settings", specifier = ">=2.0.0" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "pyzmq", specifier = ">=27.1.0" },
     { name = "rich", specifier = ">=13.0.0" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.4" },
     { name = "scipy", specifier = ">=1.17.0" },
     { name = "sounddevice", specifier = ">=0.4.6" },
+    { name = "stretch3-zmq-core", editable = "packages/core" },
     { name = "urchin", specifier = ">=0.0.30" },
     { name = "websockets", specifier = "==12.0" },
-]
-provides-extras = ["dev"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "prek", specifier = ">=0.3.3" },
-    { name = "pytest", specifier = ">=9.0.2" },
-    { name = "types-pyyaml", specifier = ">=6.0.12.20250915" },
 ]
 
 [[package]]

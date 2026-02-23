@@ -6,12 +6,12 @@ from typing import Any
 
 import stretch_body.robot
 
-from stretch3_zmq.core.messages.command import BaseCommand, ManipulatorCommand
-from stretch3_zmq.core.messages.orientation import Orientation
-from stretch3_zmq.core.messages.pose_2d import Pose2D
-from stretch3_zmq.core.messages.status import IMU, Odometry, Status
-from stretch3_zmq.core.messages.twist_2d import Twist2D
-from stretch3_zmq.core.messages.vector_3d import Vector3D
+from stretch3_zmq_core.messages.command import BaseCommand, ManipulatorCommand
+from stretch3_zmq_core.messages.orientation import Orientation
+from stretch3_zmq_core.messages.pose_2d import Pose2D
+from stretch3_zmq_core.messages.status import IMU, Odometry, Status
+from stretch3_zmq_core.messages.twist_2d import Twist2D
+from stretch3_zmq_core.messages.vector_3d import Vector3D
 
 logger = logging.getLogger(__name__)
 

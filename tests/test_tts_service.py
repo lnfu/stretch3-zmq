@@ -2,8 +2,8 @@
 
 import pytest
 
-from stretch3_zmq.driver.tts.providers.base import PROVIDER_ENV_KEYS, TTSProvider
-from stretch3_zmq.driver.tts.service import ProviderNotFoundError, TTSService
+from stretch3_zmq_driver.tts.providers.base import PROVIDER_ENV_KEYS, TTSProvider
+from stretch3_zmq_driver.tts.service import ProviderNotFoundError, TTSService
 
 
 class TestTTSService:

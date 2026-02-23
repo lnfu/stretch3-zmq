@@ -6,7 +6,7 @@ import pytest
 import yaml
 from pydantic import ValidationError
 
-from stretch3_zmq.driver.config import (
+from stretch3_zmq_driver.config import (
     ArducamConfig,
     ASRConfig,
     D405Config,

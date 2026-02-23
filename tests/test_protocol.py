@@ -5,7 +5,7 @@ import time
 
 import pytest
 
-from stretch3_zmq.core.messages.protocol import decode_with_timestamp, encode_with_timestamp
+from stretch3_zmq_core.messages.protocol import decode_with_timestamp, encode_with_timestamp
 
 
 def test_encode_creates_two_parts() -> None:

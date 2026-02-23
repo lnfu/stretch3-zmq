@@ -3,11 +3,11 @@
 import pytest
 from pydantic import ValidationError
 
-from stretch3_zmq.core.messages.orientation import Orientation
-from stretch3_zmq.core.messages.pose_2d import Pose2D
-from stretch3_zmq.core.messages.status import IMU, Odometry
-from stretch3_zmq.core.messages.twist_2d import Twist2D
-from stretch3_zmq.core.messages.vector_3d import Vector3D
+from stretch3_zmq_core.messages.orientation import Orientation
+from stretch3_zmq_core.messages.pose_2d import Pose2D
+from stretch3_zmq_core.messages.status import IMU, Odometry
+from stretch3_zmq_core.messages.twist_2d import Twist2D
+from stretch3_zmq_core.messages.vector_3d import Vector3D
 
 
 class TestPose2D:
@@ -35,7 +35,7 @@ class TestPose2D:
 
     def test_invalid_string_raises(self) -> None:
         with pytest.raises(ValidationError):
-            Pose2D(x="not_a_float")
+            Pose2D(x="not_a_float")  # type: ignore[arg-type]
 
     def test_model_dump(self) -> None:
         pose = Pose2D(x=1.0, y=2.0, theta=0.5)
@@ -65,7 +65,7 @@ class TestTwist2D:
 
     def test_invalid_raises(self) -> None:
         with pytest.raises(ValidationError):
-            Twist2D(linear="fast")
+            Twist2D(linear="fast")  # type: ignore[arg-type]
 
     def test_model_dump(self) -> None:
         twist = Twist2D(linear=0.5, angular=0.1)
@@ -95,7 +95,7 @@ class TestVector3D:
 
     def test_invalid_type_raises(self) -> None:
         with pytest.raises(ValidationError):
-            Vector3D(x="bad")
+            Vector3D(x="bad")  # type: ignore[arg-type]
 
 
 class TestOrientation:
@@ -114,11 +114,11 @@ class TestOrientation:
     def test_missing_field_raises(self) -> None:
         with pytest.raises(ValidationError):
             # missing yaw
-            Orientation(roll=0.0, pitch=0.0)
+            Orientation(roll=0.0, pitch=0.0)  # type: ignore[call-arg]
 
     def test_invalid_type_raises(self) -> None:
         with pytest.raises(ValidationError):
-            Orientation(roll="bad", pitch=0.0, yaw=0.0)
+            Orientation(roll="bad", pitch=0.0, yaw=0.0)  # type: ignore[arg-type]
 
     def test_model_dump(self) -> None:
         o = Orientation(roll=1.0, pitch=2.0, yaw=3.0)
@@ -143,8 +143,8 @@ class TestOdometry:
     def test_nested_dict_construction(self) -> None:
         """Pydantic should accept nested dicts and coerce them to model instances."""
         odom = Odometry(
-            pose={"x": 3.0, "y": 4.0, "theta": 1.0},
-            twist={"linear": 0.5, "angular": 0.1},
+            pose={"x": 3.0, "y": 4.0, "theta": 1.0},  # type: ignore[arg-type]
+            twist={"linear": 0.5, "angular": 0.1},  # type: ignore[arg-type]
         )
         assert odom.pose.x == 3.0
         assert isinstance(odom.pose, Pose2D)
@@ -152,11 +152,11 @@ class TestOdometry:
 
     def test_missing_pose_raises(self) -> None:
         with pytest.raises(ValidationError):
-            Odometry(twist=Twist2D())
+            Odometry(twist=Twist2D())  # type: ignore[call-arg]
 
     def test_missing_twist_raises(self) -> None:
         with pytest.raises(ValidationError):
-            Odometry(pose=Pose2D())
+            Odometry(pose=Pose2D())  # type: ignore[call-arg]
 
     def test_model_dump_nested(self) -> None:
         odom = Odometry(
@@ -187,23 +187,23 @@ class TestIMU:
 
     def test_missing_gyro_raises(self) -> None:
         with pytest.raises(ValidationError):
-            IMU(
+            IMU(  # type: ignore[call-arg]
                 orientation=Orientation(roll=0.0, pitch=0.0, yaw=0.0),
                 acceleration=Vector3D(),
             )
 
     def test_missing_orientation_raises(self) -> None:
         with pytest.raises(ValidationError):
-            IMU(
+            IMU(  # type: ignore[call-arg]
                 acceleration=Vector3D(),
                 gyro=Vector3D(),
             )
 
     def test_nested_dict_construction(self) -> None:
         imu = IMU(
-            orientation={"roll": 0.1, "pitch": 0.2, "yaw": 0.3},
-            acceleration={"x": 0.0, "y": 0.0, "z": 9.8},
-            gyro={"x": 0.0, "y": 0.0, "z": 0.0},
+            orientation={"roll": 0.1, "pitch": 0.2, "yaw": 0.3},  # type: ignore[arg-type]
+            acceleration={"x": 0.0, "y": 0.0, "z": 9.8},  # type: ignore[arg-type]
+            gyro={"x": 0.0, "y": 0.0, "z": 0.0},  # type: ignore[arg-type]
         )
         assert imu.orientation.roll == 0.1
         assert isinstance(imu.orientation, Orientation)

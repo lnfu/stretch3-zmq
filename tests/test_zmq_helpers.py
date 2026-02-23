@@ -18,7 +18,7 @@ for _mod in ("stretch_body", "stretch_body.robot"):
 import pytest  # noqa: E402
 import zmq  # noqa: E402
 
-from stretch3_zmq.driver.services.zmq_helpers import zmq_socket, zmq_socket_pair  # noqa: E402
+from stretch3_zmq_driver.services.zmq_helpers import zmq_socket, zmq_socket_pair  # noqa: E402
 
 # Use ports in a high range unlikely to conflict with running services.
 # Each test binds and immediately releases, so sequential reuse is safe.

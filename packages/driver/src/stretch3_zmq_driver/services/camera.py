@@ -6,7 +6,7 @@ from typing import NoReturn
 
 import zmq
 
-from stretch3_zmq.core.messages.protocol import encode_with_timestamp
+from stretch3_zmq_core.messages.protocol import encode_with_timestamp
 
 from ..camera.arducam import ArducamCamera
 from ..camera.realsense import RealSenseCamera

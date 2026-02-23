@@ -12,10 +12,10 @@ import cv2
 import numpy as np
 import zmq
 
-from stretch3_zmq.core.messages.command import BaseCommand, ManipulatorCommand
-from stretch3_zmq.core.messages.pose_2d import Pose2D
-from stretch3_zmq.core.messages.protocol import decode_with_timestamp, encode_with_timestamp
-from stretch3_zmq.core.messages.status import Status
+from stretch3_zmq_core.messages.command import BaseCommand, ManipulatorCommand
+from stretch3_zmq_core.messages.protocol import decode_with_timestamp, encode_with_timestamp
+from stretch3_zmq_core.messages.status import Status
+from stretch3_zmq_core.messages.twist_2d import Twist2D
 
 CAMERA_RECV_TIMEOUT_MS = 5000
 
@@ -56,7 +56,7 @@ def _stream_arducam(socket: zmq.Socket) -> None:
         while True:
             try:
                 parts = socket.recv_multipart()
-                timestamp_ns, raw = decode_with_timestamp(parts)
+                _, raw = decode_with_timestamp(parts)
             except zmq.Again:
                 print("\nArducam: no frame received (timeout).")
                 break
@@ -149,9 +149,10 @@ def _handle_command(cmd_socket: zmq.Socket, args_str: str) -> None:
             print("No positions provided. Using default dummy positions.")
             positions = (0.0, 0.5, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0)
 
-        parts = [b"manipulator"] + encode_with_timestamp(
-            ManipulatorCommand(joint_positions=positions).to_bytes()
-        )
+        parts = [
+            b"manipulator",
+            *encode_with_timestamp(ManipulatorCommand(joint_positions=positions).to_bytes()),
+        ]
         cmd_socket.send_multipart(parts)
         print(f"Sent command: {positions}\n")
     except ValueError as e:
@@ -179,8 +180,8 @@ def _handle_base_command(cmd_socket: zmq.Socket, args_str: str) -> None:
         y = floats[1] if len(floats) > 1 else 0.0
         theta = floats[2] if len(floats) > 2 else 0.0
 
-        command = BaseCommand(mode=mode, pose=Pose2D(x=x, y=y, theta=theta))
-        parts = [b"base"] + encode_with_timestamp(command.to_bytes())
+        command = BaseCommand(mode=mode, twist=Twist2D(linear=x, angular=theta))  # type: ignore[arg-type]
+        parts = [b"base", *encode_with_timestamp(command.to_bytes())]
         cmd_socket.send_multipart(parts)
         print(f"Sent base command: x={x} y={y} theta={theta} mode={mode}\n")
     except ValueError as e:
@@ -200,9 +201,8 @@ def _handle_status(status_socket: zmq.Socket) -> None:
 
             # Calculate message age for latency monitoring
             age_ms = (time.time_ns() - timestamp_ns) / 1_000_000
-            pos_str = ", ".join(f"{p:.2f}" for p in status.joint_positions)
-            odom_str = f"{status.odometry.pose.x:.2f}, {status.odometry.pose.y:.2f}, {status.odometry.pose.theta:.2f}"
-            # pos=[{pos_str}]
+            pose = status.odometry.pose
+            odom_str = f"{pose.x:.2f}, {pose.y:.2f}, {pose.theta:.2f}"
             print(
                 f"\r[Status] odom=[{odom_str}] runstop={status.runstop} age={age_ms:.1f}ms",
                 end="",

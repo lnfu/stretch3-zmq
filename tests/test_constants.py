@@ -6,7 +6,7 @@ from enum import StrEnum
 
 import pytest
 
-from stretch3_zmq.core.constants import JointName
+from stretch3_zmq_core.constants import JointName
 
 
 class TestJointName:
@@ -65,21 +65,21 @@ class TestSkipValidation:
     def test_default_is_false(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """SKIP_VALIDATION defaults to False when env var is absent."""
         monkeypatch.delenv("SKIP_VALIDATION", raising=False)
-        import stretch3_zmq.core.constants as mod
+        import stretch3_zmq_core.constants as mod
 
         importlib.reload(mod)
         assert mod.SKIP_VALIDATION is False
 
     def test_enabled_when_set_to_one(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("SKIP_VALIDATION", "1")
-        import stretch3_zmq.core.constants as mod
+        import stretch3_zmq_core.constants as mod
 
         importlib.reload(mod)
         assert mod.SKIP_VALIDATION is True
 
     def test_not_enabled_when_set_to_zero(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("SKIP_VALIDATION", "0")
-        import stretch3_zmq.core.constants as mod
+        import stretch3_zmq_core.constants as mod
 
         importlib.reload(mod)
         assert mod.SKIP_VALIDATION is False
@@ -87,7 +87,7 @@ class TestSkipValidation:
     def test_not_enabled_for_other_values(self, monkeypatch: pytest.MonkeyPatch) -> None:
         for val in ("true", "True", "yes", "on", "1 "):
             monkeypatch.setenv("SKIP_VALIDATION", val)
-            import stretch3_zmq.core.constants as mod
+            import stretch3_zmq_core.constants as mod
 
             importlib.reload(mod)
             assert mod.SKIP_VALIDATION is False, f"Expected False for SKIP_VALIDATION={val!r}"
@@ -95,6 +95,6 @@ class TestSkipValidation:
     def teardown_method(self) -> None:
         """Restore constants module to default state after each test."""
         os.environ.pop("SKIP_VALIDATION", None)
-        import stretch3_zmq.core.constants as mod
+        import stretch3_zmq_core.constants as mod
 
         importlib.reload(mod)
