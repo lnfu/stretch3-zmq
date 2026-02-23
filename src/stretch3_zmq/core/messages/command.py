@@ -4,7 +4,7 @@ import msgpack
 from pydantic import BaseModel, field_validator
 
 from ..constants import SKIP_VALIDATION, JointName
-from .pose_2d import Pose2D
+from .twist_2d import Twist2D
 
 
 class ManipulatorCommand(BaseModel):
@@ -33,7 +33,7 @@ class ManipulatorCommand(BaseModel):
 
 class BaseCommand(BaseModel):
     mode: Literal["velocity", "position"] = "velocity"
-    pose: Pose2D
+    twist: Twist2D
 
     def to_bytes(self) -> bytes:
         return cast(bytes, msgpack.packb(self.model_dump()))

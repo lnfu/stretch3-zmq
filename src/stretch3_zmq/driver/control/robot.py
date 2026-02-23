@@ -105,7 +105,24 @@ class StretchRobot:
 
     def execute_base_command(self, command: BaseCommand) -> None:
         """Execute a base command on the robot."""
-        pass
+
+        if command.mode == "position":
+            if command.twist.linear != 0.0 and command.twist.angular != 0.0:
+                logger.warning(
+                    f"Skipping command: both base_translate ({command.twist.linear}) and "
+                    f"base_rotate ({command.twist.angular}) are non-zero. "
+                    "Only one can be non-zero at a time."
+                )
+                return
+            if command.twist.linear != 0.0:
+                self._robot.base.translate_by(command.twist.linear)
+            if command.twist.angular != 0.0:
+                self._robot.base.rotate_by(command.twist.angular)
+            self._robot.push_command()
+        elif command.mode == "velocity":
+            raise NotImplementedError("Velocity control is not implemented yet.")
+        else:
+            raise ValueError(f"Unknown command mode: {command.mode}")
 
     def stop(self) -> None:
         """Stop the robot motion."""
