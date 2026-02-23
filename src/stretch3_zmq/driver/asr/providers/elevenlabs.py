@@ -39,7 +39,7 @@ class ElevenLabsProvider(BaseASRProvider):
         url = f"{self.WS_BASE_URL}?{urlencode(params)}"
         headers = {"xi-api-key": self._api_key}
 
-        self._ws = await websockets.connect(url, additional_headers=headers)
+        self._ws = await websockets.connect(url, extra_headers=headers)
         logger.info("ElevenLabs WebSocket connected")
 
     async def send_audio(self, audio_chunk: bytes) -> None:

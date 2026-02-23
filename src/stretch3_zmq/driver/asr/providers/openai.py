@@ -40,7 +40,7 @@ class OpenAIProvider(BaseASRProvider):
             "OpenAI-Beta": "realtime=v1",
         }
 
-        self._ws = await websockets.connect(self.WS_URL, additional_headers=headers)
+        self._ws = await websockets.connect(self.WS_URL, extra_headers=headers)
         logger.info("OpenAI WebSocket connected")
 
         # Wait for session.created event
