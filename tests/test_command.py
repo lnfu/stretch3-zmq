@@ -4,8 +4,8 @@ import msgpack
 import pytest
 from pydantic import ValidationError
 
-import stretch3_zmq_core.messages.command as cmd_module
-from stretch3_zmq_core.messages.command import ManipulatorCommand
+import stretch3_zmq.core.messages.command as cmd_module
+from stretch3_zmq.core.messages.command import ManipulatorCommand
 
 
 class TestManipulatorCommand:
@@ -71,7 +71,7 @@ class TestManipulatorCommand:
     def test_list_input_accepted(self) -> None:
         """Pydantic should coerce a list to a tuple."""
         positions_list = [0.0, 0.0, 0.5, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0]
-        cmd = ManipulatorCommand(joint_positions=positions_list)  # type: ignore[arg-type]
+        cmd = ManipulatorCommand(joint_positions=positions_list)
         assert len(cmd.joint_positions) == 10
 
     def test_negative_values_accepted(self) -> None:

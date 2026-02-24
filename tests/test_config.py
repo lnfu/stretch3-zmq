@@ -6,7 +6,7 @@ import pytest
 import yaml
 from pydantic import ValidationError
 
-from stretch3_zmq_driver.config import (
+from stretch3_zmq.driver.config import (
     ArducamConfig,
     ASRConfig,
     D405Config,
@@ -89,7 +89,7 @@ class TestPortsConfig:
 
     def test_invalid_port_type_raises(self) -> None:
         with pytest.raises(ValidationError):
-            PortsConfig(status="not_a_port")  # type: ignore[arg-type]
+            PortsConfig(status="not_a_port")
 
 
 class TestServiceConfig:
@@ -103,7 +103,7 @@ class TestServiceConfig:
 
     def test_invalid_rate_type_raises(self) -> None:
         with pytest.raises(ValidationError):
-            ServiceConfig(status_rate_hz="fast")  # type: ignore[arg-type]
+            ServiceConfig(status_rate_hz="fast")
 
 
 class TestTTSConfig:

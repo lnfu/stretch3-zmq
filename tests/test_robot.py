@@ -17,7 +17,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 if TYPE_CHECKING:
-    from stretch3_zmq_driver.control.robot import StretchRobot
+    from stretch3_zmq.driver.control.robot import StretchRobot
 
 # ---------------------------------------------------------------------------
 # Stub stretch_body before any driver package import.
@@ -34,8 +34,8 @@ for _mod in (
     if _mod not in sys.modules:
         sys.modules[_mod] = MagicMock()
 
-from stretch3_zmq_core.messages.command import ManipulatorCommand  # noqa: E402
-from stretch3_zmq_core.messages.status import Status  # noqa: E402
+from stretch3_zmq.core.messages.command import ManipulatorCommand  # noqa: E402
+from stretch3_zmq.core.messages.status import Status  # noqa: E402
 
 requires_robot = pytest.mark.skipif(
     not os.getenv("HELLO_FLEET_ID"),
@@ -98,7 +98,7 @@ def mock_robot() -> Iterator[tuple["StretchRobot", MagicMock]]:
     the MagicMock attribute-aliasing issue where sys.modules["stretch_body.robot"]
     and stretch_body.robot (as seen inside robot.py) are different objects.
     """
-    from stretch3_zmq_driver.control.robot import StretchRobot
+    from stretch3_zmq.driver.control.robot import StretchRobot
 
     mock_inner = _make_mock_inner()
     robot = StretchRobot.__new__(StretchRobot)
@@ -225,7 +225,7 @@ class TestGetStatusLogic:
 
     def test_get_status_joint_counts(self, mock_robot: tuple["StretchRobot", MagicMock]) -> None:
         """get_status returns 10 joint readings (one per JointName entry)."""
-        from stretch3_zmq_core.constants import JointName
+        from stretch3_zmq.core.constants import JointName
 
         robot, _ = mock_robot
         status = robot.get_status()
@@ -317,9 +317,9 @@ class TestStretchRobotLifecycle:
         mock_inner.startup.return_value = False
         # Patch Robot where it's imported in robot.py
         with patch(
-            "stretch3_zmq_driver.control.robot.stretch_body.robot.Robot", return_value=mock_inner
+            "stretch3_zmq.driver.control.robot.stretch_body.robot.Robot", return_value=mock_inner
         ):
-            from stretch3_zmq_driver.control.robot import StretchRobot
+            from stretch3_zmq.driver.control.robot import StretchRobot
 
             with pytest.raises(RuntimeError, match="Failed to startup stretch robot"):
                 StretchRobot()
@@ -330,9 +330,9 @@ class TestStretchRobotLifecycle:
         mock_inner.startup.return_value = True
         mock_inner.is_homed.return_value = False  # never becomes homed
         with patch(
-            "stretch3_zmq_driver.control.robot.stretch_body.robot.Robot", return_value=mock_inner
+            "stretch3_zmq.driver.control.robot.stretch_body.robot.Robot", return_value=mock_inner
         ):
-            from stretch3_zmq_driver.control.robot import StretchRobot
+            from stretch3_zmq.driver.control.robot import StretchRobot
 
             with pytest.raises(RuntimeError, match="not homed"):
                 StretchRobot()
@@ -358,13 +358,13 @@ class TestStretchRobotLifecycle:
 @requires_robot
 class TestStretchRobotHardware:
     def test_startup_and_shutdown(self) -> None:
-        from stretch3_zmq_driver.control.robot import StretchRobot
+        from stretch3_zmq.driver.control.robot import StretchRobot
 
         robot = StretchRobot()
         robot.shutdown()
 
     def test_get_status_returns_valid_status(self) -> None:
-        from stretch3_zmq_driver.control.robot import StretchRobot
+        from stretch3_zmq.driver.control.robot import StretchRobot
 
         robot = StretchRobot()
         try:
@@ -380,7 +380,7 @@ class TestStretchRobotHardware:
             robot.shutdown()
 
     def test_get_status_base_joints_are_zero(self) -> None:
-        from stretch3_zmq_driver.control.robot import StretchRobot
+        from stretch3_zmq.driver.control.robot import StretchRobot
 
         robot = StretchRobot()
         try:
@@ -392,7 +392,7 @@ class TestStretchRobotHardware:
 
     def test_execute_command_dual_base_is_noop(self) -> None:
         """Command with both base axes non-zero must be silently skipped."""
-        from stretch3_zmq_driver.control.robot import StretchRobot
+        from stretch3_zmq.driver.control.robot import StretchRobot
 
         robot = StretchRobot()
         try:
@@ -404,7 +404,7 @@ class TestStretchRobotHardware:
 
     def test_get_status_serializable(self) -> None:
         """Status returned by real hardware must survive a to_bytes/from_bytes roundtrip."""
-        from stretch3_zmq_driver.control.robot import StretchRobot
+        from stretch3_zmq.driver.control.robot import StretchRobot
 
         robot = StretchRobot()
         try:

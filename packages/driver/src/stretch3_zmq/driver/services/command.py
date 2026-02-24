@@ -6,8 +6,8 @@ from typing import Any, NoReturn
 
 import zmq
 
-from stretch3_zmq_core.messages.command import BaseCommand, ManipulatorCommand
-from stretch3_zmq_core.messages.protocol import decode_with_timestamp
+from stretch3_zmq.core.messages.command import BaseCommand, ManipulatorCommand
+from stretch3_zmq.core.messages.protocol import decode_with_timestamp
 
 from ..config import DriverConfig
 from ..control.robot import StretchRobot

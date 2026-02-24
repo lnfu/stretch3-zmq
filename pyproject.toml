@@ -16,7 +16,7 @@ line-length = 100
 select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["stretch3_zmq_core", "stretch3_zmq_driver"]
+known-first-party = ["stretch3_zmq"]
 
 [tool.mypy]
 python_version = "3.12"
