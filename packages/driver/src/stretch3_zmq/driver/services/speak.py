@@ -2,6 +2,7 @@
 
 import logging
 import os
+import time
 from typing import NoReturn
 
 import zmq
@@ -20,6 +21,9 @@ def speak_service(config: DriverConfig) -> NoReturn:
     TTS service: Receives text from ZeroMQ and plays audio.
 
     Listens on tcp://*:{ports.tts} using PULL socket pattern.
+    Publishes playback status on tcp://*:{ports.tts_status} using PUB socket.
+    Each message is two frames: [job_id (nanosecond timestamp str),
+    status ("started"|"done"|"error")].
     """
     provider = TTSProvider(config.tts.provider)
     env_key = PROVIDER_ENV_KEYS[provider]
@@ -41,17 +45,27 @@ def speak_service(config: DriverConfig) -> NoReturn:
 
     logger.info(f"TTS Service initialized with provider: {tts_service.provider_name.value}")
 
-    with zmq_socket(zmq.PULL, f"tcp://*:{config.ports.tts}") as socket:
-        logger.info(f"Speak service started. Listening on tcp://*:{config.ports.tts}")
+    with (
+        zmq_socket(zmq.PULL, f"tcp://*:{config.ports.tts}") as pull_socket,
+        zmq_socket(zmq.PUB, f"tcp://*:{config.ports.tts_status}") as status_socket,
+    ):
+        logger.info(
+            f"Speak service started. Listening on tcp://*:{config.ports.tts}, "
+            f"publishing status on tcp://*:{config.ports.tts_status}"
+        )
 
         while True:
-            text = socket.recv_string()
-            logger.info(f"[SPEAK] Received text: {text}")
+            text = pull_socket.recv_string()
+            job_id = str(time.time_ns())
+            logger.info(f"[SPEAK] Received text (id={job_id}): {text}")
 
             if text.strip():
+                status_socket.send_multipart([job_id.encode(), b"started"])
                 try:
                     audio_data = tts_service.convert(text, tts_config)
                     play_audio(audio_data)
-                    logger.info("[SPEAK] Audio playback completed")
+                    logger.info(f"[SPEAK] Audio playback completed (id={job_id})")
+                    status_socket.send_multipart([job_id.encode(), b"done"])
                 except Exception as e:
-                    logger.exception(f"[SPEAK] Error converting text to speech: {e}")
+                    logger.exception(f"[SPEAK] Error converting text to speech (id={job_id}): {e}")
+                    status_socket.send_multipart([job_id.encode(), b"error"])

@@ -80,7 +80,8 @@ class TestPortsConfig:
         assert ports.d435if == 6001
         assert ports.d405 == 6002
         assert ports.tts == 6101
-        assert ports.asr == 6102
+        assert ports.tts_status == 6102
+        assert ports.asr == 6103
 
     def test_custom_status_port(self) -> None:
         ports = PortsConfig(status=9999)

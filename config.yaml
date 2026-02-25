@@ -8,7 +8,8 @@ ports:
   d435if: 6001
   d405: 6002
   tts: 6101
-  asr: 6102
+  tts_status: 6102
+  asr: 6103
 
 # Service Settings
 service:

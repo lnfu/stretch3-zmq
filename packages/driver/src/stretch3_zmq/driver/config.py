@@ -18,7 +18,8 @@ class PortsConfig(BaseModel):
     d435if: int = 6001
     d405: int = 6002
     tts: int = 6101
-    asr: int = 6102
+    tts_status: int = 6102
+    asr: int = 6103
 
 
 class ServiceConfig(BaseModel):
