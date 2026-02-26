@@ -20,10 +20,10 @@ def speak_service(config: DriverConfig) -> NoReturn:
     """
     TTS service: Receives text from ZeroMQ and plays audio.
 
-    Listens on tcp://*:{ports.tts} using PULL socket pattern.
+    Listens on tcp://*:{ports.tts} using REP socket pattern.
+    Immediately replies with a job_id (nanosecond timestamp string) upon receiving text.
     Publishes playback status on tcp://*:{ports.tts_status} using PUB socket.
-    Each message is two frames: [job_id (nanosecond timestamp str),
-    status ("started"|"done"|"error")].
+    Each status message is two frames: [job_id, status ("started"|"done"|"error")].
     """
     provider = TTSProvider(config.tts.provider)
     env_key = PROVIDER_ENV_KEYS[provider]
@@ -46,7 +46,7 @@ def speak_service(config: DriverConfig) -> NoReturn:
     logger.info(f"TTS Service initialized with provider: {tts_service.provider_name.value}")
 
     with (
-        zmq_socket(zmq.PULL, f"tcp://*:{config.ports.tts}") as pull_socket,
+        zmq_socket(zmq.REP, f"tcp://*:{config.ports.tts}") as rep_socket,
         zmq_socket(zmq.PUB, f"tcp://*:{config.ports.tts_status}") as status_socket,
     ):
         logger.info(
@@ -55,8 +55,9 @@ def speak_service(config: DriverConfig) -> NoReturn:
         )
 
         while True:
-            text = pull_socket.recv_string()
+            text = rep_socket.recv_string()
             job_id = str(time.time_ns())
+            rep_socket.send_string(job_id)
             logger.info(f"[SPEAK] Received text (id={job_id}): {text}")
 
             if text.strip():

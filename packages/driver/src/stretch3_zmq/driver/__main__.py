@@ -152,7 +152,7 @@ def main() -> None:
     logger.info(f"  - Status service: tcp://*:{config.ports.status} (PUB)")
     logger.info(f"  - Command service: tcp://*:{config.ports.command} (SUB)")
     if config.tts.enabled:
-        logger.info(f"  - Speak service: tcp://*:{config.ports.tts} (PULL)")
+        logger.info(f"  - Speak service: tcp://*:{config.ports.tts} (REP)")
     if config.asr.enabled:
         logger.info(f"  - Listen service: tcp://*:{config.ports.asr} (REP)")
     if config.arducam.enabled:

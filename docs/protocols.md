@@ -31,7 +31,7 @@ TTS input and ASR messages are plain UTF-8 strings (no msgpack).
 | arducam    | 6000 | PUB     | Arducam OV9782 RGB frames                       |
 | d435if     | 6001 | PUB     | RealSense D435i RGB + depth frames              |
 | d405       | 6002 | PUB     | RealSense D405 RGB + depth frames               |
-| tts        | 6101 | PULL    | Text-to-speech input                            |
+| tts        | 6101 | REP     | Text-to-speech input (returns job_id)           |
 | tts_status | 6102 | PUB     | TTS job status updates                          |
 | asr        | 6103 | REP     | Automatic speech recognition (request/reply)    |
 
@@ -189,16 +189,25 @@ Same message format as d435if.
 ### tts — Text-to-Speech Input
 
 - **Address:** `tcp://*:6101`
-- **Pattern:** PULL (fire-and-forget queue)
+- **Pattern:** REP (synchronous request/reply)
 
 Receives plain UTF-8 text strings and synthesizes speech using the configured TTS provider
 (`fish_audio` or `elevenlabs`). Audio is played directly on the robot's speaker. Empty or
 whitespace-only strings are silently ignored.
 
-**Message:** single-frame plain string (no multipart, no timestamp)
+The server replies immediately with a `job_id` (nanosecond timestamp string) before starting
+synthesis, so the client can track progress on the `tts_status` port.
+
+**Request:** single-frame plain string
 
 ```
-recv_string() → text: str
+send_string(text)
+```
+
+**Reply:** single-frame plain string
+
+```
+recv_string() → job_id: str   (nanosecond timestamp, e.g. "1740000000000000000")
 ```
 
 Status updates for each job are published on the separate `tts_status` port (see below).

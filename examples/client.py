@@ -129,7 +129,8 @@ def _connect_sub(
 def _handle_tts(tts_socket: zmq.Socket, text: str) -> None:
     if text:
         tts_socket.send_string(text)
-        print("Sent\n")
+        job_id = tts_socket.recv_string()
+        print(f"Sent (job_id={job_id})\n")
     else:
         print("No text provided\n")
 
@@ -246,7 +247,7 @@ def main() -> None:
 
     try:
         # Control & speech sockets
-        tts_socket = context.socket(zmq.PUSH)
+        tts_socket = context.socket(zmq.REQ)
         tts_socket.connect(f"tcp://{server_ip}:{args.tts_port}")
 
         asr_socket = context.socket(zmq.REQ)
