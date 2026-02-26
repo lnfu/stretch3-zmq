@@ -82,3 +82,7 @@ Then import from ``stretch3_zmq.core``:
     from stretch3_zmq.core.messages.command import ManipulatorCommand
     from stretch3_zmq.core.messages.status import Status
     from stretch3_zmq.core.messages.protocol import decode_with_timestamp
+
+Documentation
+-------------
+`docs/protocols.md <docs/protocols.md>`_ — ZeroMQ service reference: ports, patterns, topics, and message schemas.
