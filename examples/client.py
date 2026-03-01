@@ -9,6 +9,7 @@ import argparse
 import time
 
 import cv2
+import msgpack
 import numpy as np
 import zmq
 
@@ -192,6 +193,27 @@ def _handle_base_command(cmd_socket: zmq.Socket, args_str: str) -> None:
         print(f"Error sending base command: {e}\n")
 
 
+def _handle_goto(goto_socket: zmq.Socket, args_str: str) -> None:
+    tokens = args_str.split()
+    if len(tokens) != 2 or tokens[0] not in ("linear", "angular"):
+        print("Usage: goto linear <m>  |  goto angular <rad>\n")
+        return
+    try:
+        value = float(tokens[1])
+    except ValueError:
+        print(f"Invalid value: {tokens[1]!r}\n")
+        return
+
+    axis = tokens[0]
+    twist = {
+        "linear": value if axis == "linear" else 0.0,
+        "angular": value if axis == "angular" else 0.0,
+    }
+    goto_socket.send(msgpack.packb(twist))
+    reply = goto_socket.recv_string()
+    print(f"Reply: {reply}\n")
+
+
 def _handle_status(status_socket: zmq.Socket) -> None:
     print("Receiving status... (Ctrl+C to stop)")
     try:
@@ -223,6 +245,8 @@ Commands:
   asr                               Start listening for speech
   command <p0>...<p9>               Send manipulator command (10 joint positions)
   base <x> [y] [theta] [mode]       Send base command (mode: velocity|position)
+  goto linear <m>                   Blocking base translate (metres)
+  goto angular <rad>                Blocking base rotate (radians)
   status                            Subscribe to robot status (Ctrl+C to stop)
   camera [camera_name]              Stream camera feed (press 'q' to stop)
                                     Options: arducam, d435if (default), d405
@@ -235,6 +259,7 @@ def main() -> None:
     parser.add_argument("server_ip", help="Server IP address")
     parser.add_argument("--status-port", type=int, default=5555, help="Status port")
     parser.add_argument("--command-port", type=int, default=5556, help="Command port")
+    parser.add_argument("--goto-port", type=int, default=5557, help="Goto port")
     parser.add_argument("--tts-port", type=int, default=6101, help="TTS port")
     parser.add_argument("--asr-port", type=int, default=6102, help="ASR port")
     parser.add_argument("--arducam-port", type=int, default=6000, help="Arducam port")
@@ -252,6 +277,9 @@ def main() -> None:
 
         asr_socket = context.socket(zmq.REQ)
         asr_socket.connect(f"tcp://{server_ip}:{args.asr_port}")
+
+        goto_socket = context.socket(zmq.REQ)
+        goto_socket.connect(f"tcp://{server_ip}:{args.goto_port}")
 
         cmd_socket = context.socket(zmq.PUB)
         cmd_socket.connect(f"tcp://{server_ip}:{args.command_port}")
@@ -297,6 +325,8 @@ def main() -> None:
                 _handle_command(cmd_socket, user_input[7:].strip())
             elif cmd.startswith("base"):
                 _handle_base_command(cmd_socket, user_input[4:].strip())
+            elif cmd.startswith("goto"):
+                _handle_goto(goto_socket, user_input[4:].strip())
             elif cmd == "status":
                 _handle_status(status_socket)
             elif cmd == "camera" or cmd.startswith("camera "):

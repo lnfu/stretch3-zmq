@@ -28,6 +28,7 @@ TTS input and ASR messages are plain UTF-8 strings (no msgpack).
 |------------|------|---------|-------------------------------------------------|
 | status     | 5555 | PUB     | Robot state published at `status_rate_hz`       |
 | command    | 5556 | SUB     | Manipulator and base motion commands            |
+| goto       | 5557 | REP     | Blocking base position move (linear or angular) |
 | arducam    | 6000 | PUB     | Arducam OV9782 RGB frames                       |
 | d435if     | 6001 | PUB     | RealSense D435i RGB + depth frames              |
 | d405       | 6002 | PUB     | RealSense D405 RGB + depth frames               |
@@ -126,6 +127,36 @@ ManipulatorCommand
 BaseCommand
 ├── mode: "velocity" | "position"  (default: "velocity")
 └── twist: Twist2D { linear: float (m/s), angular: float (rad/s) }
+```
+
+---
+
+### goto — Blocking Base Move
+
+- **Address:** `tcp://*:5557`
+- **Pattern:** REP (synchronous request/reply)
+- **Model:** [`Twist2D`](../packages/core/src/stretch3_zmq/core/messages/twist_2d.py)
+
+Commands a single blocking base move. Exactly one of `linear` or `angular` may be non-zero per
+request; providing both non-zero values is an error. The server blocks until the motion
+completes, then replies.
+
+**Request:** single-frame msgpack-encoded `Twist2D`
+
+```
+send(msgpack.packb({"linear": float, "angular": float}))
+```
+
+| Field     | Unit  | Description                                              |
+|-----------|-------|----------------------------------------------------------|
+| `linear`  | m     | Distance to translate forward (negative = backward)      |
+| `angular` | rad   | Angle to rotate in place (positive = counter-clockwise)  |
+
+**Reply:** single-frame plain string
+
+```
+recv_string() → "ok"              on success
+             → "error: <message>" on failure (e.g. both fields non-zero)
 ```
 
 ---

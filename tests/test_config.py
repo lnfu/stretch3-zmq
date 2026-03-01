@@ -76,6 +76,7 @@ class TestPortsConfig:
         ports = PortsConfig()
         assert ports.status == 5555
         assert ports.command == 5556
+        assert ports.goto == 5557
         assert ports.arducam == 6000
         assert ports.d435if == 6001
         assert ports.d405 == 6002

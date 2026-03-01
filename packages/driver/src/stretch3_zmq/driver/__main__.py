@@ -12,6 +12,7 @@ from .services import (
     command_service,
     d405_service,
     d435if_service,
+    goto_service,
     listen_service,
     speak_service,
     status_service,
@@ -90,6 +91,14 @@ def main() -> None:
             args=(config, robot_instance),
         )
     )
+    threads.append(
+        threading.Thread(
+            target=goto_service,
+            name="GotoService",
+            daemon=True,
+            args=(config, robot_instance),
+        )
+    )
 
     # TTS/ASR services (only if enabled)
     if config.tts.enabled:
@@ -151,6 +160,7 @@ def main() -> None:
 
     logger.info(f"  - Status service: tcp://*:{config.ports.status} (PUB)")
     logger.info(f"  - Command service: tcp://*:{config.ports.command} (SUB)")
+    logger.info(f"  - Goto service: tcp://*:{config.ports.goto} (REP)")
     if config.tts.enabled:
         logger.info(f"  - Speak service: tcp://*:{config.ports.tts} (REP)")
     if config.asr.enabled:

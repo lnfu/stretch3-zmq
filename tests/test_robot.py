@@ -310,6 +310,51 @@ class TestGetStatusLogic:
         assert abs(status.odometry.twist.angular - 0.1) < 1e-9
 
 
+class TestGotoLogic:
+    def test_goto_linear_only_calls_translate(
+        self, mock_robot: tuple["StretchRobot", MagicMock]
+    ) -> None:
+        from stretch3_zmq.core.messages.twist_2d import Twist2D
+
+        robot, inner = mock_robot
+        robot.goto(Twist2D(linear=0.5, angular=0.0))
+        inner.base.translate_by.assert_called_once_with(0.5)
+        inner.base.rotate_by.assert_not_called()
+        inner.push_command.assert_called_once()
+        inner.wait_command.assert_called_once()
+
+    def test_goto_angular_only_calls_rotate(
+        self, mock_robot: tuple["StretchRobot", MagicMock]
+    ) -> None:
+        from stretch3_zmq.core.messages.twist_2d import Twist2D
+
+        robot, inner = mock_robot
+        robot.goto(Twist2D(linear=0.0, angular=0.3))
+        inner.base.rotate_by.assert_called_once_with(0.3)
+        inner.base.translate_by.assert_not_called()
+        inner.push_command.assert_called_once()
+        inner.wait_command.assert_called_once()
+
+    def test_goto_both_nonzero_raises(self, mock_robot: tuple["StretchRobot", MagicMock]) -> None:
+        from stretch3_zmq.core.messages.twist_2d import Twist2D
+
+        robot, inner = mock_robot
+        with pytest.raises(ValueError, match="both linear"):
+            robot.goto(Twist2D(linear=0.5, angular=0.3))
+        inner.push_command.assert_not_called()
+        inner.wait_command.assert_not_called()
+
+    def test_goto_both_zero_skips_move(self, mock_robot: tuple["StretchRobot", MagicMock]) -> None:
+        from stretch3_zmq.core.messages.twist_2d import Twist2D
+
+        robot, inner = mock_robot
+        robot.goto(Twist2D(linear=0.0, angular=0.0))
+        inner.base.translate_by.assert_not_called()
+        inner.base.rotate_by.assert_not_called()
+        inner.push_command.assert_called_once()
+        inner.wait_command.assert_called_once()
+
+
 class TestStretchRobotLifecycle:
     def test_startup_failure_raises(self) -> None:
         """__init__ raises when stretch_body.Robot.startup() returns False."""

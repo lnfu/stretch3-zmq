@@ -124,6 +124,20 @@ class StretchRobot:
         else:
             raise ValueError(f"Unknown command mode: {command.mode}")
 
+    def goto(self, twist: Twist2D) -> None:
+        """Blocking base position move — returns only after motion completes."""
+        if twist.linear != 0.0 and twist.angular != 0.0:
+            raise ValueError(
+                f"Skipping goto: both linear ({twist.linear}) and angular ({twist.angular}) "
+                "are non-zero. Only one can be non-zero at a time."
+            )
+        if twist.linear != 0.0:
+            self._robot.base.translate_by(twist.linear)
+        if twist.angular != 0.0:
+            self._robot.base.rotate_by(twist.angular)
+        self._robot.push_command()
+        self._robot.wait_command()  # blocking
+
     def stop(self) -> None:
         """Stop the robot motion."""
         self._robot.stop()

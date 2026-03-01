@@ -14,6 +14,7 @@ from pydantic import BaseModel
 class PortsConfig(BaseModel):
     status: int = 5555
     command: int = 5556
+    goto: int = 5557
     arducam: int = 6000
     d435if: int = 6001
     d405: int = 6002
