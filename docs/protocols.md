@@ -29,6 +29,7 @@ TTS input and ASR messages are plain UTF-8 strings (no msgpack).
 | status     | 5555 | PUB     | Robot state published at `status_rate_hz`       |
 | command    | 5556 | SUB     | Manipulator and base motion commands            |
 | goto       | 5557 | REP     | Blocking base position move (linear or angular) |
+| servo      | 5558 | SUB     | End-effector Cartesian servo (delta pose + gripper) |
 | arducam    | 6000 | PUB     | Arducam OV9782 RGB frames                       |
 | d435if     | 6001 | PUB     | RealSense D435i RGB + depth frames              |
 | d405       | 6002 | PUB     | RealSense D405 RGB + depth frames               |
@@ -157,6 +158,38 @@ send(msgpack.packb({"linear": float, "angular": float}))
 ```
 recv_string() → "ok"              on success
              → "error: <message>" on failure (e.g. both fields non-zero)
+```
+
+---
+
+### servo — End-Effector Cartesian Servo
+
+- **Address:** `tcp://*:5558`
+- **Pattern:** SUB (server-side; clients use PUB)
+- **Topic:** `servo`
+- **Model:** [`ServoCommand`](../packages/core/src/stretch3_zmq/core/messages/servo.py)
+
+Receives relative end-effector delta poses and executes them via inverse kinematics. The
+`ee_pose` is interpreted as a delta in the current end-effector frame. The `gripper` value is
+absolute (not a delta). Failures (including IK non-convergence) are logged and silently ignored.
+
+**Multipart frames:**
+
+```
+[0] topic      — b"servo"
+[1] timestamp  — 8 bytes, nanoseconds since epoch
+[2] payload    — msgpack-encoded ServoCommand
+```
+
+**`ServoCommand` schema:**
+
+```
+ServoCommand
+├── ee_pose: Pose3D                    — relative delta pose in current EE frame
+│   ├── position: Vector3D            — { x: float (m), y: float (m), z: float (m) }
+│   └── orientation: Vector4D        — quaternion { x, y, z, w } (unit quaternion)
+└── gripper: float                    — absolute opening in [0.0, 1.0]
+                                        (0.0 = fully closed, 1.0 = fully open)
 ```
 
 ---

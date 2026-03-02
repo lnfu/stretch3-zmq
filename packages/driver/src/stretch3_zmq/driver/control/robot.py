@@ -4,14 +4,18 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
+import numpy as np
 import stretch_body.robot
+from scipy.spatial.transform import Rotation
 
 from stretch3_zmq.core.messages.command import BaseCommand, ManipulatorCommand
 from stretch3_zmq.core.messages.orientation import Orientation
 from stretch3_zmq.core.messages.pose_2d import Pose2D
+from stretch3_zmq.core.messages.servo import ServoCommand
 from stretch3_zmq.core.messages.status import IMU, Odometry, Status
 from stretch3_zmq.core.messages.twist_2d import Twist2D
 from stretch3_zmq.core.messages.vector_3d import Vector3D
+from stretch3_zmq.driver.control.pin_model import PinModel
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +79,9 @@ class StretchRobot:
 
         logger.info("StretchRobot started successfully.")
 
+        self._pin_model = PinModel()
+        logger.info("PinModel initialized successfully.")
+
     def execute_manipulator_command(self, command: ManipulatorCommand) -> None:
         """Execute a joint position command on the robot."""
 
@@ -137,6 +144,121 @@ class StretchRobot:
             self._robot.base.rotate_by(twist.angular)
         self._robot.push_command()
         self._robot.wait_command()  # blocking
+
+    def servo(self, command: ServoCommand) -> None:
+        """
+        Execute an end-effector servo command.
+
+        Converts the relative EE pose delta + absolute gripper value into joint positions
+        via IK, then sends a ManipulatorCommand to the robot.
+
+        Args:
+            command: ServoCommand with relative ee_pose and absolute gripper (0~1).
+        """
+        joint_positions = self._solve_ik(command)
+        self.execute_manipulator_command(ManipulatorCommand(joint_positions=joint_positions))
+
+    def _solve_ik(
+        self, command: ServoCommand
+    ) -> tuple[float, ...]:  # TODO(lnfu) rename function & description
+        """
+        Solve inverse kinematics for the given servo command.
+
+        Args:
+            command: ServoCommand with relative ee_pose and absolute gripper (0-1).
+
+        Returns:
+            Joint positions tuple matching JointName order.
+        """
+        ee_frame = "link_grasp_center"
+
+        # 1. Get current joint positions from robot status
+        self._robot.pull_status()
+        s = self._robot.status
+
+        lift_pos = s["lift"]["pos"]
+        arm_pos = s["arm"]["pos"]  # total extension (0-0.52)
+        wrist_yaw = s["end_of_arm"]["wrist_yaw"]["pos"]
+        wrist_pitch = s["end_of_arm"]["wrist_pitch"]["pos"]
+        wrist_roll = s["end_of_arm"]["wrist_roll"]["pos"]
+
+        # 2. Map stretch_body joints to URDF joint names
+        #    The arm extension is split equally across 4 prismatic joints
+        arm_per_segment = arm_pos / 4.0
+        joint_positions = {
+            "joint_base_translation": 0.0,
+            "joint_lift": lift_pos,
+            "joint_arm_l3": arm_per_segment,
+            "joint_arm_l2": arm_per_segment,
+            "joint_arm_l1": arm_per_segment,
+            "joint_arm_l0": arm_per_segment,
+            "joint_wrist_yaw": wrist_yaw,
+            "joint_wrist_pitch": wrist_pitch,
+            "joint_wrist_roll": wrist_roll,
+        }
+
+        # 3. Update pinocchio model with current joint positions (runs FK internally)
+        self._pin_model.update_q(joint_positions)
+
+        # 4. Get current EE pose in world frame (4x4 homogeneous matrix)
+        current_ee_pose = self._pin_model.get_transform("base_link", ee_frame)
+
+        # 5. Build the relative 4x4 transform from the servo command
+        p = command.ee_pose.position
+        o = command.ee_pose.orientation
+
+        rot = Rotation.from_quat([o.x, o.y, o.z, o.w]).as_matrix()
+        delta = np.eye(4)
+        delta[:3, :3] = rot
+        delta[:3, 3] = [p.x, p.y, p.z]
+
+        # 6. Compute target EE pose in world frame: current * delta
+        target_pose = current_ee_pose @ delta
+
+        # 7. Run IK
+        q_result = self._pin_model.ik(target_pose, ee_frame=ee_frame)
+        if q_result is None:
+            raise RuntimeError("IK did not converge")
+
+        # 8. Extract joint positions from IK result and map back to JointName order
+        model = self._pin_model.model
+
+        def _get_q(name: str) -> float:
+            jid = model.getJointId(name)
+            idx = model.joints[jid].idx_q
+            return float(q_result[idx])
+
+        ik_base_translation = _get_q("joint_base_translation")
+        ik_lift = _get_q("joint_lift")
+        ik_arm = (
+            _get_q("joint_arm_l3")
+            + _get_q("joint_arm_l2")
+            + _get_q("joint_arm_l1")
+            + _get_q("joint_arm_l0")
+        )
+        ik_wrist_yaw = _get_q("joint_wrist_yaw")
+        ik_wrist_pitch = _get_q("joint_wrist_pitch")
+        ik_wrist_roll = _get_q("joint_wrist_roll")
+
+        # Gripper: map from 0-1 (ServoCommand) to 0-100 (stretch_body)
+        gripper_value = command.gripper * 100.0
+
+        # Return in JointName order:
+        # base_translate, base_rotate, lift, arm,
+        # head_pan, head_tilt,
+        # wrist_yaw, wrist_pitch, wrist_roll, gripper
+        return (
+            ik_base_translation,  # base_translate
+            0.0,  # base_rotate (no base movement during servo)
+            ik_lift,  # lift
+            ik_arm,  # arm (summed from 4 segments)
+            0.0,  # head_pan (unchanged)
+            0.0,  # head_tilt (unchanged)
+            ik_wrist_yaw,  # wrist_yaw
+            ik_wrist_pitch,  # wrist_pitch
+            ik_wrist_roll,  # wrist_roll
+            gripper_value,  # gripper (mapped 0-1 -> 0-100)
+        )
 
     def stop(self) -> None:
         """Stop the robot motion."""

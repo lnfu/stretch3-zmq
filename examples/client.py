@@ -14,9 +14,13 @@ import numpy as np
 import zmq
 
 from stretch3_zmq.core.messages.command import BaseCommand, ManipulatorCommand
+from stretch3_zmq.core.messages.pose_3d import Pose3D
 from stretch3_zmq.core.messages.protocol import decode_with_timestamp, encode_with_timestamp
+from stretch3_zmq.core.messages.servo import ServoCommand
 from stretch3_zmq.core.messages.status import Status
 from stretch3_zmq.core.messages.twist_2d import Twist2D
+from stretch3_zmq.core.messages.vector_3d import Vector3D
+from stretch3_zmq.core.messages.vector_4d import Vector4D
 
 CAMERA_RECV_TIMEOUT_MS = 5000
 
@@ -193,6 +197,40 @@ def _handle_base_command(cmd_socket: zmq.Socket, args_str: str) -> None:
         print(f"Error sending base command: {e}\n")
 
 
+def _handle_servo(servo_socket: zmq.Socket, args_str: str) -> None:
+    """Send a ServoCommand: relative EE delta pose + absolute gripper.
+
+    Usage: servo [dx] [dy] [dz] [qx] [qy] [qz] [qw] [gripper]
+    All arguments are optional and default to identity pose (no motion) with gripper=0.5.
+    Example: servo 0.05 0.0 0.0 0.0 0.0 0.0 1.0 0.5
+    """
+    tokens = args_str.split()
+    try:
+        vals = [float(t) for t in tokens]
+        dx, dy, dz = (vals[i] if i < len(vals) else 0.0 for i in range(3))
+        qx, qy, qz = (vals[i] if i < len(vals) else 0.0 for i in range(3, 6))
+        qw = vals[6] if len(vals) > 6 else 1.0
+        gripper = vals[7] if len(vals) > 7 else 0.5
+    except ValueError as e:
+        print(f"Invalid input: {e}")
+        print("Usage: servo [dx] [dy] [dz] [qx] [qy] [qz] [qw] [gripper]\n")
+        return
+
+    command = ServoCommand(
+        ee_pose=Pose3D(
+            position=Vector3D(x=dx, y=dy, z=dz),
+            orientation=Vector4D(x=qx, y=qy, z=qz, w=qw),
+        ),
+        gripper=gripper,
+    )
+    parts = [b"servo", *encode_with_timestamp(command.to_bytes())]
+    servo_socket.send_multipart(parts)
+    print(
+        f"Sent servo command: pos=({dx},{dy},{dz}) quat=({qx},{qy},{qz},{qw}) \
+        gripper={gripper}\n"
+    )
+
+
 def _handle_goto(goto_socket: zmq.Socket, args_str: str) -> None:
     tokens = args_str.split()
     if len(tokens) != 2 or tokens[0] not in ("linear", "angular"):
@@ -247,6 +285,7 @@ Commands:
   base <x> [y] [theta] [mode]       Send base command (mode: velocity|position)
   goto linear <m>                   Blocking base translate (metres)
   goto angular <rad>                Blocking base rotate (radians)
+  servo [dx dy dz qx qy qz qw g]   Send EE delta pose + gripper (all optional, default=identity/0.5)
   status                            Subscribe to robot status (Ctrl+C to stop)
   camera [camera_name]              Stream camera feed (press 'q' to stop)
                                     Options: arducam, d435if (default), d405
@@ -260,6 +299,7 @@ def main() -> None:
     parser.add_argument("--status-port", type=int, default=5555, help="Status port")
     parser.add_argument("--command-port", type=int, default=5556, help="Command port")
     parser.add_argument("--goto-port", type=int, default=5557, help="Goto port")
+    parser.add_argument("--servo-port", type=int, default=5558, help="Servo port")
     parser.add_argument("--tts-port", type=int, default=6101, help="TTS port")
     parser.add_argument("--asr-port", type=int, default=6102, help="ASR port")
     parser.add_argument("--arducam-port", type=int, default=6000, help="Arducam port")
@@ -280,6 +320,9 @@ def main() -> None:
 
         goto_socket = context.socket(zmq.REQ)
         goto_socket.connect(f"tcp://{server_ip}:{args.goto_port}")
+
+        servo_socket = context.socket(zmq.PUB)
+        servo_socket.connect(f"tcp://{server_ip}:{args.servo_port}")
 
         cmd_socket = context.socket(zmq.PUB)
         cmd_socket.connect(f"tcp://{server_ip}:{args.command_port}")
@@ -327,6 +370,8 @@ def main() -> None:
                 _handle_base_command(cmd_socket, user_input[4:].strip())
             elif cmd.startswith("goto"):
                 _handle_goto(goto_socket, user_input[4:].strip())
+            elif cmd.startswith("servo"):
+                _handle_servo(servo_socket, user_input[5:].strip())
             elif cmd == "status":
                 _handle_status(status_socket)
             elif cmd == "camera" or cmd.startswith("camera "):
