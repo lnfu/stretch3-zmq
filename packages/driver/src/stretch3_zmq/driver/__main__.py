@@ -108,27 +108,14 @@ def main() -> None:
             args=(config, robot_instance),
         )
     )
-<<<<<<< HEAD
-<<<<<<< HEAD
     threads.append(
         threading.Thread(
             target=servo_endpoint,
             name="ServoEndpoint",
-=======
-    threads.append(
-        threading.Thread(
-            target=servo_service,
-            name="ServoService",
->>>>>>> 6341f82 (feat: add servo service (ee 6d pose + gripper))
             daemon=True,
             args=(config, robot_instance),
         )
     )
-<<<<<<< HEAD
-=======
->>>>>>> 45e6cdc (refactor: services -> endpoints)
-=======
->>>>>>> 6341f82 (feat: add servo service (ee 6d pose + gripper))
 
     # TTS/ASR endpoints (only if enabled)
     if config.tts.enabled:
@@ -151,11 +138,7 @@ def main() -> None:
             )
         )
 
-<<<<<<< HEAD
     # Camera endpoints (only if enabled)
-=======
-    # Camera services (only if enabled)
->>>>>>> 4fa34dd (feat: image (rgb+depth) compression (blosc+lz4))
     if config.cameras.arducam.enabled:
         threads.append(
             threading.Thread(
