@@ -109,16 +109,26 @@ def main() -> None:
         )
     )
 <<<<<<< HEAD
+<<<<<<< HEAD
     threads.append(
         threading.Thread(
             target=servo_endpoint,
             name="ServoEndpoint",
+=======
+    threads.append(
+        threading.Thread(
+            target=servo_service,
+            name="ServoService",
+>>>>>>> 6341f82 (feat: add servo service (ee 6d pose + gripper))
             daemon=True,
             args=(config, robot_instance),
         )
     )
+<<<<<<< HEAD
 =======
 >>>>>>> 45e6cdc (refactor: services -> endpoints)
+=======
+>>>>>>> 6341f82 (feat: add servo service (ee 6d pose + gripper))
 
     # TTS/ASR endpoints (only if enabled)
     if config.tts.enabled:
