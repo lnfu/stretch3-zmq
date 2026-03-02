@@ -14,6 +14,7 @@ from .endpoints import (
     d435if_endpoint,
     goto_endpoint,
     listen_endpoint,
+    servo_endpoint,
     speak_endpoint,
     status_endpoint,
 )
@@ -99,6 +100,14 @@ def main() -> None:
             args=(config, robot_instance),
         )
     )
+    threads.append(
+        threading.Thread(
+            target=servo_endpoint,
+            name="ServoEndpoint",
+            daemon=True,
+            args=(config, robot_instance),
+        )
+    )
 
     # TTS/ASR services (only if enabled)
     if config.tts.enabled:
@@ -161,6 +170,7 @@ def main() -> None:
     logger.info(f"  - Status service: tcp://*:{config.ports.status} (PUB)")
     logger.info(f"  - Command service: tcp://*:{config.ports.command} (SUB)")
     logger.info(f"  - Goto service: tcp://*:{config.ports.goto} (REP)")
+    logger.info(f"  - Servo service: tcp://*:{config.ports.servo} (SUB)")
     if config.tts.enabled:
         logger.info(f"  - Speak service: tcp://*:{config.ports.tts} (REP)")
     if config.asr.enabled:
