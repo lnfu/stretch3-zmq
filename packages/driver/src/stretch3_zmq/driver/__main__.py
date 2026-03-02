@@ -1,4 +1,4 @@
-"""Main entry point that orchestrates all Stretch3-ZMQ Driver services."""
+"""Main entry point that orchestrates all Stretch3-ZMQ Driver endpoints."""
 
 import argparse
 import logging
@@ -51,7 +51,7 @@ def main() -> None:
 
     threads: list[threading.Thread] = []
 
-    # Robot services
+    # Robot endpoints
     logger.info("Initializing robot in main thread...")
     from .control.robot import StretchRobot
 
@@ -82,7 +82,7 @@ def main() -> None:
     threads.append(
         threading.Thread(
             target=status_endpoint,
-            name="StatusService",
+            name="StatusEndpoint",
             daemon=True,
             args=(config, robot_instance),
         )
@@ -90,7 +90,7 @@ def main() -> None:
     threads.append(
         threading.Thread(
             target=command_endpoint,
-            name="CommandService",
+            name="CommandEndpoint",
             daemon=True,
             args=(config, robot_instance),
         )
@@ -98,7 +98,15 @@ def main() -> None:
     threads.append(
         threading.Thread(
             target=goto_endpoint,
-            name="GotoService",
+            name="GotoEndpoint",
+            daemon=True,
+            args=(config, robot_instance),
+        )
+    )
+    threads.append(
+        threading.Thread(
+            target=servo_endpoint,
+            name="ServoEndpoint",
             daemon=True,
             args=(config, robot_instance),
         )
@@ -112,12 +120,12 @@ def main() -> None:
         )
     )
 
-    # TTS/ASR services (only if enabled)
+    # TTS/ASR endpoints (only if enabled)
     if config.tts.enabled:
         threads.append(
             threading.Thread(
                 target=speak_endpoint,
-                name="SpeakService",
+                name="SpeakEndpoint",
                 daemon=True,
                 args=(config,),
             )
@@ -127,18 +135,18 @@ def main() -> None:
         threads.append(
             threading.Thread(
                 target=listen_endpoint,
-                name="ListenService",
+                name="ListenEndpoint",
                 daemon=True,
                 args=(config,),
             )
         )
 
-    # Camera services (only if enabled)
+    # Camera endpoints (only if enabled)
     if config.cameras.arducam.enabled:
         threads.append(
             threading.Thread(
                 target=arducam_endpoint,
-                name="ArducamService",
+                name="ArducamEndpoint",
                 daemon=True,
                 args=(config,),
             )
@@ -148,7 +156,7 @@ def main() -> None:
         threads.append(
             threading.Thread(
                 target=d435if_endpoint,
-                name="D435iService",
+                name="D435iEndpoint",
                 daemon=True,
                 args=(config,),
             )
@@ -158,7 +166,7 @@ def main() -> None:
         threads.append(
             threading.Thread(
                 target=d405_endpoint,
-                name="D405Service",
+                name="D405Endpoint",
                 daemon=True,
                 args=(config,),
             )
@@ -168,22 +176,22 @@ def main() -> None:
     for thread in threads:
         thread.start()
 
-    logger.info("All services started successfully")
+    logger.info("All endpoints started successfully")
 
-    logger.info(f"  - Status service: tcp://*:{config.ports.status} (PUB)")
-    logger.info(f"  - Command service: tcp://*:{config.ports.command} (SUB)")
-    logger.info(f"  - Goto service: tcp://*:{config.ports.goto} (REP)")
-    logger.info(f"  - Servo service: tcp://*:{config.ports.servo} (SUB)")
+    logger.info(f"  - Status endpoint: tcp://*:{config.ports.status} (PUB)")
+    logger.info(f"  - Command endpoint: tcp://*:{config.ports.command} (SUB)")
+    logger.info(f"  - Goto endpoint: tcp://*:{config.ports.goto} (REP)")
+    logger.info(f"  - Servo endpoint: tcp://*:{config.ports.servo} (SUB)")
     if config.tts.enabled:
-        logger.info(f"  - Speak service: tcp://*:{config.ports.tts} (REP)")
+        logger.info(f"  - Speak endpoint: tcp://*:{config.ports.tts} (REP)")
     if config.asr.enabled:
-        logger.info(f"  - Listen service: tcp://*:{config.ports.asr} (REP)")
+        logger.info(f"  - Listen endpoint: tcp://*:{config.ports.asr} (REP)")
     if config.cameras.arducam.enabled:
-        logger.info(f"  - Arducam service: tcp://*:{config.ports.arducam} (PUB)")
+        logger.info(f"  - Arducam endpoint: tcp://*:{config.ports.arducam} (PUB)")
     if config.cameras.d435if.enabled:
-        logger.info(f"  - D435i service: tcp://*:{config.ports.d435if} (PUB, topics: rgb/depth)")
+        logger.info(f"  - D435i endpoint: tcp://*:{config.ports.d435if} (PUB, topics: rgb/depth)")
     if config.cameras.d405.enabled:
-        logger.info(f"  - D405 service: tcp://*:{config.ports.d405} (PUB, topics: rgb/depth)")
+        logger.info(f"  - D405 endpoint: tcp://*:{config.ports.d405} (PUB, topics: rgb/depth)")
 
     try:
         # Keep main thread alive

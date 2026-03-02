@@ -29,6 +29,7 @@ dependencies = [
     "blosc2>=2.0.0",
     "pin>=3.9.0",
     "blosc2>=2.0.0",
+    "pin>=3.9.0",
 ]
 
 [project.scripts]
