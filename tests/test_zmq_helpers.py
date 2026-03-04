@@ -36,16 +36,16 @@ class TestZmqSocket:
             assert socket is not None
             assert socket.type == zmq.SUB
 
-    def test_pub_socket_sndhwm_set_to_one(self) -> None:
+    def test_pub_socket_sndhwm_set_to_32(self) -> None:
         with zmq_socket(zmq.PUB, f"tcp://127.0.0.1:{_BASE_PORT + 2}") as socket:
-            assert socket.getsockopt(zmq.SNDHWM) == 1
+            assert socket.getsockopt(zmq.SNDHWM) == 32
 
-    def test_sub_socket_rcvhwm_set_to_one(self) -> None:
+    def test_sub_socket_rcvhwm_set_to_32(self) -> None:
         with zmq_socket(zmq.SUB, f"tcp://127.0.0.1:{_BASE_PORT + 3}") as socket:
-            assert socket.getsockopt(zmq.RCVHWM) == 1
+            assert socket.getsockopt(zmq.RCVHWM) == 32
 
     def test_non_pub_sub_socket_has_no_hwm_override(self) -> None:
-        """PUSH socket should use ZMQ's default HWM (not forced to 1)."""
+        """PUSH socket should use ZMQ's default HWM (not forced to 32)."""
         default_hwm = zmq.Context().socket(zmq.PUSH).getsockopt(zmq.SNDHWM)
         with zmq_socket(zmq.PUSH, f"tcp://127.0.0.1:{_BASE_PORT + 4}") as socket:
             # The helper only overrides HWM for PUB/SUB, not PUSH
@@ -86,13 +86,13 @@ class TestZmqSocketPair:
             assert a.type == zmq.PUB
             assert b.type == zmq.PUB
 
-    def test_both_sockets_have_sndhwm_one(self) -> None:
+    def test_both_sockets_have_sndhwm_32(self) -> None:
         with zmq_socket_pair(
             f"tcp://127.0.0.1:{_BASE_PORT + 12}",
             f"tcp://127.0.0.1:{_BASE_PORT + 13}",
         ) as (a, b):
-            assert a.getsockopt(zmq.SNDHWM) == 1
-            assert b.getsockopt(zmq.SNDHWM) == 1
+            assert a.getsockopt(zmq.SNDHWM) == 32
+            assert b.getsockopt(zmq.SNDHWM) == 32
 
     def test_both_sockets_closed_after_context(self) -> None:
         with zmq_socket_pair(
