@@ -115,9 +115,23 @@ class StretchRobot:
                 )
                 return
             if command.twist.linear != 0.0:
-                self._robot.base.translate_by(command.twist.linear)
+                self._robot.base.translate_by(
+                    command.twist.linear,
+                    v_m=self._robot.base.params["motion"]["max"]["vel_m"],  # TODO(lnfu)
+                    a_m=self._robot.base.params["motion"]["max"]["accel_m"],  # TODO(lnfu)
+                    stiffness=1,  # TODO(lnfu)
+                )
             if command.twist.angular != 0.0:
-                self._robot.base.rotate_by(command.twist.angular)
+                self._robot.base.rotate_by(
+                    command.twist.angular,
+                    v_r=self._robot.base.translate_to_motor_rad(
+                        self._robot.base.params["motion"]["max"]["vel_m"]
+                    ),  # TODO(lnfu)
+                    a_r=self._robot.base.translate_to_motor_rad(
+                        self._robot.base.params["motion"]["max"]["accel_m"]
+                    ),  # TODO(lnfu)
+                    stiffness=1,  # TODO(lnfu)
+                )
             self._robot.push_command()
         elif command.mode == "velocity":
             raise NotImplementedError("Velocity control is not implemented yet.")
