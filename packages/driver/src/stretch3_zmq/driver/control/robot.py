@@ -150,7 +150,7 @@ class StretchRobot:
         if twist.angular != 0.0:
             self._robot.base.rotate_by(twist.angular)
         self._robot.push_command()
-        self._robot.wait_command()  # blocking
+        self._robot.wait_command(timeout=100.0)  # blocking # TODO(lnfu)
 
     def stop(self) -> None:
         """Stop the robot motion."""
