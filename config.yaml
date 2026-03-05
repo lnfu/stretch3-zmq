@@ -19,12 +19,18 @@ service:
 tts:
   enabled: true
   provider: fish_audio
+  voice_id: "e855dc04a51f48549b484e41c4d4d4cc"        # empty = provider default
+  model_id: ~         # null = provider default
+  output_format: pcm_22050  # ElevenLabs: pcm_22050 | pcm_24000 | pcm_44100 | pcm_48000
+  speed: 0.7
 
 # ASR Settings
 asr:
   enabled: true
   provider: deepgram
   timeout_seconds: 10.0
+  language: zh-TW
+  model_id: ~  # null = use provider default
 
 # Camera Settings
 arducam:

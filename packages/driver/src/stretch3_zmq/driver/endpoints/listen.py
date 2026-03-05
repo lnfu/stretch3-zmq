@@ -30,7 +30,8 @@ def listen_endpoint(config: DriverConfig) -> NoReturn:
         raise ValueError(f"API key not found. Please set {env_key} in your environment.")
 
     asr_config = ASRConfig(
-        language="zh-TW",
+        language=config.asr.language,
+        model_id=config.asr.model_id,
     )
 
     with zmq_socket(zmq.REP, f"tcp://*:{config.ports.asr}") as socket:

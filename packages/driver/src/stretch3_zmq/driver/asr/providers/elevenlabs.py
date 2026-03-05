@@ -18,7 +18,7 @@ class ElevenLabsProvider(BaseASRProvider):
     ENCODING = "pcm_16000"
     ENABLE_LOGGING = True
 
-    WS_BASE_URL = "wss://api.elevenlabs.io/v1/speech-to-text"
+    WS_BASE_URL = "wss://api.elevenlabs.io/v1/speech-to-text/stream-input"
 
     @property
     def provider_name(self) -> ASRProvider:

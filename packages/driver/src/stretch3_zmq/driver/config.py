@@ -30,12 +30,18 @@ class ServiceConfig(BaseModel):
 class TTSConfig(BaseModel):
     enabled: bool = True
     provider: str = "fish_audio"
+    voice_id: str = ""
+    model_id: str | None = None
+    output_format: str = "pcm_22050"  # ElevenLabs: pcm_22050 | pcm_24000 | pcm_44100 | pcm_48000
+    speed: float = 1.0
 
 
 class ASRConfig(BaseModel):
     enabled: bool = True
     provider: str = "deepgram"
     timeout_seconds: float = 10.0
+    language: str = "en"
+    model_id: str | None = None
 
 
 class ArducamConfig(BaseModel):

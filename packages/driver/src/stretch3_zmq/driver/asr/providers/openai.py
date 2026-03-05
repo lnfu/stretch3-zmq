@@ -43,15 +43,15 @@ class OpenAIProvider(BaseASRProvider):
         self._ws = await websockets.connect(self.WS_URL, extra_headers=headers)
         logger.info("OpenAI WebSocket connected")
 
-        # Wait for session.created event
+        # Wait for transcription_session.created event
         response = await self.ws.recv()
         event = json.loads(response)
-        if event.get("type") != "session.created":
+        if event.get("type") != "transcription_session.created":
             raise RuntimeError(f"Unexpected event: {event}")
 
         # Configure session
         session_config = {
-            "type": "session.update",
+            "type": "transcription_session.update",
             "session": {
                 "input_audio_format": self.AUDIO_FORMAT,
                 "input_audio_transcription": {

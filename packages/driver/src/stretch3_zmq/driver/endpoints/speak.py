@@ -38,10 +38,18 @@ def speak_endpoint(config: DriverConfig) -> NoReturn:
     )
 
     tts_config = TTSConfig(
-        voice_id="",
-        model_id=None,
-        voice_settings=VoiceSettings(speed=1.0),
+        voice_id=config.tts.voice_id,
+        model_id=config.tts.model_id,
+        output_format=config.tts.output_format,
+        voice_settings=VoiceSettings(speed=config.tts.speed),
     )
+    if provider == TTSProvider.FISH_AUDIO:
+        tts_sample_rate = 16000  # Fish Audio always returns PCM at 16000 Hz
+    else:
+        try:
+            tts_sample_rate = int(config.tts.output_format.split("_")[-1])
+        except (ValueError, IndexError):
+            tts_sample_rate = 22050
 
     logger.info(f"TTS Service initialized with provider: {tts_service.provider_name.value}")
 
@@ -64,7 +72,7 @@ def speak_endpoint(config: DriverConfig) -> NoReturn:
                 status_socket.send_multipart([job_id.encode(), b"started"])
                 try:
                     audio_data = tts_service.convert(text, tts_config)
-                    play_audio(audio_data)
+                    play_audio(audio_data, sample_rate=tts_sample_rate)
                     logger.info(f"[SPEAK] Audio playback completed (id={job_id})")
                     status_socket.send_multipart([job_id.encode(), b"done"])
                 except Exception as e:

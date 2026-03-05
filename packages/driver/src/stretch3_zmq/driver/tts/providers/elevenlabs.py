@@ -65,7 +65,7 @@ class ElevenLabsProvider(BaseTTSProvider):
 
     def convert(self, text: str, config: TTSConfig) -> bytes:
         """
-        Convert text to speech and return full audio data (PCM 16000).
+        Convert text to speech and return full audio data.
 
         Raises:
             httpx.HTTPStatusError: If the API request fails.
@@ -73,7 +73,7 @@ class ElevenLabsProvider(BaseTTSProvider):
         voice_id = config.voice_id or self.DEFAULT_VOICE_ID
 
         url = f"{self.base_url}/v1/text-to-speech/{voice_id}"
-        params = {"output_format": "pcm_16000"}
+        params = {"output_format": config.output_format}
         body = self._build_request_body(text, config)
 
         with httpx.Client(timeout=60.0) as client:
@@ -83,6 +83,11 @@ class ElevenLabsProvider(BaseTTSProvider):
                 params=params,
                 json=body,
             )
-            response.raise_for_status()
+            if not response.is_success:
+                raise httpx.HTTPStatusError(
+                    f"{response.status_code} {response.reason_phrase}: {response.text}",
+                    request=response.request,
+                    response=response,
+                )
 
             return response.content

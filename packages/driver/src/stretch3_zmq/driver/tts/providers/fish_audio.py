@@ -10,12 +10,12 @@ from .base import BaseTTSProvider, TTSConfig, TTSProvider
 class FishAudioProvider(BaseTTSProvider):
     """Fish Audio TTS provider using REST API."""
 
-    # Default model
+    # Available models: s1 (recommended) | speech-1.6 | speech-1.5
     DEFAULT_MODEL = "s1"
 
-    # Fish Audio-specific voice settings (hardcoded)
-    TEMPERATURE: float = 0.7
-    TOP_P: float = 1.0
+    # Fish Audio-specific generation settings (hardcoded)
+    TEMPERATURE: float = 0.3
+    TOP_P: float = 0.3
 
     def _default_base_url(self) -> str:
         return "https://api.fish.audio"
@@ -24,30 +24,22 @@ class FishAudioProvider(BaseTTSProvider):
     def provider_name(self) -> TTSProvider:
         return TTSProvider.FISH_AUDIO
 
-    def _get_format_string(self) -> str:
-        """Get the format string for Fish Audio API. Fixed to PCM."""
-        return "pcm"
-
     def _build_request_body(self, text: str, config: TTSConfig) -> dict[str, Any]:
         """Build the request body for the API call."""
-        body = {
+        body: dict[str, Any] = {
             "text": text,
-            "format": self._get_format_string(),
+            "format": "pcm",
             "normalize": True,
             "sample_rate": 16000,  # Fixed to 16000 Hz
+            # Speed: 0.5~2.0 top-level field (NOT nested under prosody)
+            "speed": config.voice_settings.speed,
+            "temperature": self.TEMPERATURE,
+            "top_p": self.TOP_P,
         }
 
-        # Add reference_id (voice_id in our abstraction)
+        # reference_id selects the voice (voice_id in our abstraction)
         if config.voice_id:
             body["reference_id"] = config.voice_id
-
-        # Add voice settings with hardcoded Fish Audio-specific values
-        if config.voice_settings.speed != 1.0:
-            body["prosody"] = {"speed": config.voice_settings.speed, "volume": 0}
-
-        # Add hardcoded Fish Audio-specific parameters
-        body["temperature"] = self.TEMPERATURE
-        body["top_p"] = self.TOP_P
 
         return body
 

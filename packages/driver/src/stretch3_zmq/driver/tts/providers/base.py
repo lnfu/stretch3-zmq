@@ -25,6 +25,7 @@ class TTSConfig:
 
     voice_id: str
     model_id: str | None = None
+    output_format: str = "pcm_22050"  # ElevenLabs: pcm_22050 | pcm_24000 | pcm_44100 | pcm_48000
     bitrate: int = 128
     voice_settings: VoiceSettings = field(default_factory=VoiceSettings)
 
