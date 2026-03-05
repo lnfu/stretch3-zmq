@@ -4,6 +4,7 @@ from .camera import arducam_endpoint, d405_endpoint, d435if_endpoint
 from .command import command_endpoint
 from .goto import goto_endpoint
 from .listen import listen_endpoint
+from .servo import servo_endpoint
 from .speak import speak_endpoint
 from .status import status_endpoint
 
@@ -14,6 +15,7 @@ __all__ = [
     "d435if_endpoint",
     "goto_endpoint",
     "listen_endpoint",
+    "servo_endpoint",
     "speak_endpoint",
     "status_endpoint",
 ]
