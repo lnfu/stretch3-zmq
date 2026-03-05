@@ -14,7 +14,10 @@ from .endpoints import (
     d435if_endpoint,
     goto_endpoint,
     listen_endpoint,
+<<<<<<< HEAD
     servo_endpoint,
+=======
+>>>>>>> 895a707 (refactor: services -> endpoints)
     speak_endpoint,
     status_endpoint,
 )
