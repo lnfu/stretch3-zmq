@@ -1,4 +1,4 @@
-"""Status service: publishes robot status to ZeroMQ."""
+"""Status endpoint: publishes robot status to ZeroMQ."""
 
 import logging
 import time
@@ -15,16 +15,16 @@ from .zmq_helpers import zmq_socket
 logger = logging.getLogger(__name__)
 
 
-def status_service(config: DriverConfig, robot: StretchRobot) -> NoReturn:
+def status_endpoint(config: DriverConfig, robot: StretchRobot) -> NoReturn:
     """
-    Status service: Publishes robot status to ZeroMQ.
+    Status endpoint: Publishes robot status to ZeroMQ.
 
     Publishes on tcp://*:{ports.status} using PUB socket pattern.
     """
     status_interval = 1.0 / config.service.status_rate_hz
 
     with zmq_socket(zmq.PUB, f"tcp://*:{config.ports.status}") as socket:
-        logger.info(f"Status service started. Publishing on tcp://*:{config.ports.status}")
+        logger.info(f"Status endpoint started. Publishing on tcp://*:{config.ports.status}")
 
         while True:
             loop_start = time.time()

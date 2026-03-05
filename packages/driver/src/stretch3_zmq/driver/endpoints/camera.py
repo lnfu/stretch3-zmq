@@ -1,4 +1,4 @@
-"""Camera services: publish frames from Arducam and RealSense cameras to ZeroMQ."""
+"""Camera endpoints: publish frames from Arducam and RealSense cameras to ZeroMQ."""
 
 import logging
 import sys
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 def _setup_camera_logger() -> None:
     """
-    Set up camera service logger.
+    Set up camera endpoint logger.
 
     WORKAROUND: stretch_body disables loggers, so we need to:
     1. Re-enable the logger
@@ -39,9 +39,9 @@ def _setup_camera_logger() -> None:
         logger.propagate = False
 
 
-def arducam_service(config: DriverConfig) -> NoReturn:
+def arducam_endpoint(config: DriverConfig) -> NoReturn:
     """
-    Arducam service: Publishes camera frames to ZeroMQ.
+    Arducam endpoint: Publishes camera frames to ZeroMQ.
 
     Publishes on tcp://*:{ports.arducam} using PUB socket pattern.
     """
@@ -62,7 +62,7 @@ def arducam_service(config: DriverConfig) -> NoReturn:
         camera.start()
 
         with zmq_socket(zmq.PUB, f"tcp://*:{config.ports.arducam}") as socket:
-            logger.info(f"Arducam service started. Publishing on tcp://*:{config.ports.arducam}")
+            logger.info(f"Arducam endpoint started. Publishing on tcp://*:{config.ports.arducam}")
 
             try:
                 while True:
@@ -73,13 +73,13 @@ def arducam_service(config: DriverConfig) -> NoReturn:
             finally:
                 camera.stop()
     except Exception as e:
-        logger.error(f"FATAL ERROR in arducam_service: {e}", exc_info=True)
+        logger.error(f"FATAL ERROR in arducam_endpoint: {e}", exc_info=True)
         raise
 
 
-def _realsense_service(camera: RealSenseCamera, port: int, name: str) -> NoReturn:
+def _realsense_endpoint(camera: RealSenseCamera, port: int, name: str) -> NoReturn:
     """
-    RealSense service: Publishes color and depth frames to ZeroMQ.
+    RealSense endpoint: Publishes color and depth frames to ZeroMQ.
 
     Publishes on tcp://*:{port} using topic-prefixed multipart messages:
       [b"rgb",   timestamp, payload] - color frame
@@ -92,7 +92,7 @@ def _realsense_service(camera: RealSenseCamera, port: int, name: str) -> NoRetur
         camera.start()
 
         with zmq_socket(zmq.PUB, f"tcp://*:{port}") as socket:
-            logger.info(f"{name} service started. Publishing on tcp://*:{port}")
+            logger.info(f"{name} endpoint started. Publishing on tcp://*:{port}")
 
             try:
                 while True:
@@ -108,12 +108,12 @@ def _realsense_service(camera: RealSenseCamera, port: int, name: str) -> NoRetur
             finally:
                 camera.stop()
     except Exception as e:
-        logger.error(f"FATAL ERROR in {name} service: {e}", exc_info=True)
+        logger.error(f"FATAL ERROR in {name} endpoint: {e}", exc_info=True)
         raise
 
 
-def d435if_service(config: DriverConfig) -> NoReturn:
-    """D435i service: Publishes color and depth frames to ZeroMQ."""
+def d435if_endpoint(config: DriverConfig) -> NoReturn:
+    """D435i endpoint: Publishes color and depth frames to ZeroMQ."""
     camera = RealSenseCamera(
         name="D435i",
         width=config.d435if.width,
@@ -121,11 +121,11 @@ def d435if_service(config: DriverConfig) -> NoReturn:
         fps=config.d435if.fps,
         serial=config.d435if.serial,
     )
-    _realsense_service(camera, config.ports.d435if, "D435i")
+    _realsense_endpoint(camera, config.ports.d435if, "D435i")
 
 
-def d405_service(config: DriverConfig) -> NoReturn:
-    """D405 service: Publishes color and depth frames to ZeroMQ."""
+def d405_endpoint(config: DriverConfig) -> NoReturn:
+    """D405 endpoint: Publishes color and depth frames to ZeroMQ."""
     camera = RealSenseCamera(
         name="D405",
         width=config.d405.width,
@@ -133,4 +133,4 @@ def d405_service(config: DriverConfig) -> NoReturn:
         fps=config.d405.fps,
         serial=config.d405.serial,
     )
-    _realsense_service(camera, config.ports.d405, "D405")
+    _realsense_endpoint(camera, config.ports.d405, "D405")

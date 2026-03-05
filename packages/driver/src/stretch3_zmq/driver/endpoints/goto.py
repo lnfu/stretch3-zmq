@@ -1,4 +1,4 @@
-"""Goto service: blocking base position move via REQ+REP."""
+"""Goto endpoint: blocking base position move via REQ+REP."""
 
 import logging
 from typing import NoReturn
@@ -15,16 +15,16 @@ from .zmq_helpers import zmq_socket
 logger = logging.getLogger(__name__)
 
 
-def goto_service(config: DriverConfig, robot: StretchRobot) -> NoReturn:
+def goto_endpoint(config: DriverConfig, robot: StretchRobot) -> NoReturn:
     """
-    Goto service: blocking base position move.
+    Goto endpoint: blocking base position move.
 
     Listens on tcp://*:{ports.goto} using REP socket pattern.
     Request: msgpack-encoded {linear: float, angular: float} (Twist2D fields).
     Reply: "ok" on success, error message string on failure.
     """
     with zmq_socket(zmq.REP, f"tcp://*:{config.ports.goto}") as socket:
-        logger.info(f"Goto service started. Listening on tcp://*:{config.ports.goto}")
+        logger.info(f"Goto endpoint started. Listening on tcp://*:{config.ports.goto}")
 
         while True:
             try:

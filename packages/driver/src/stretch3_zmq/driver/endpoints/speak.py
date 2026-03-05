@@ -1,4 +1,4 @@
-"""TTS service: receives text from ZeroMQ and plays audio."""
+"""TTS endpoint: receives text from ZeroMQ and plays audio."""
 
 import logging
 import os
@@ -16,9 +16,9 @@ from .zmq_helpers import zmq_socket
 logger = logging.getLogger(__name__)
 
 
-def speak_service(config: DriverConfig) -> NoReturn:
+def speak_endpoint(config: DriverConfig) -> NoReturn:
     """
-    TTS service: Receives text from ZeroMQ and plays audio.
+    TTS endpoint: Receives text from ZeroMQ and plays audio.
 
     Listens on tcp://*:{ports.tts} using REP socket pattern.
     Immediately replies with a job_id (nanosecond timestamp string) upon receiving text.
@@ -50,7 +50,7 @@ def speak_service(config: DriverConfig) -> NoReturn:
         zmq_socket(zmq.PUB, f"tcp://*:{config.ports.tts_status}") as status_socket,
     ):
         logger.info(
-            f"Speak service started. Listening on tcp://*:{config.ports.tts}, "
+            f"Speak endpoint started. Listening on tcp://*:{config.ports.tts}, "
             f"publishing status on tcp://*:{config.ports.tts_status}"
         )
 

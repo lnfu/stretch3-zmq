@@ -7,15 +7,15 @@ import threading
 from dotenv import load_dotenv
 
 from .config import DriverConfig
-from .services import (
-    arducam_service,
-    command_service,
-    d405_service,
-    d435if_service,
-    goto_service,
-    listen_service,
-    speak_service,
-    status_service,
+from .endpoints import (
+    arducam_endpoint,
+    command_endpoint,
+    d405_endpoint,
+    d435if_endpoint,
+    goto_endpoint,
+    listen_endpoint,
+    speak_endpoint,
+    status_endpoint,
 )
 
 logger = logging.getLogger(__name__)
@@ -77,7 +77,7 @@ def main() -> None:
 
     threads.append(
         threading.Thread(
-            target=status_service,
+            target=status_endpoint,
             name="StatusService",
             daemon=True,
             args=(config, robot_instance),
@@ -85,7 +85,7 @@ def main() -> None:
     )
     threads.append(
         threading.Thread(
-            target=command_service,
+            target=command_endpoint,
             name="CommandService",
             daemon=True,
             args=(config, robot_instance),
@@ -93,7 +93,7 @@ def main() -> None:
     )
     threads.append(
         threading.Thread(
-            target=goto_service,
+            target=goto_endpoint,
             name="GotoService",
             daemon=True,
             args=(config, robot_instance),
@@ -104,7 +104,7 @@ def main() -> None:
     if config.tts.enabled:
         threads.append(
             threading.Thread(
-                target=speak_service,
+                target=speak_endpoint,
                 name="SpeakService",
                 daemon=True,
                 args=(config,),
@@ -114,7 +114,7 @@ def main() -> None:
     if config.asr.enabled:
         threads.append(
             threading.Thread(
-                target=listen_service,
+                target=listen_endpoint,
                 name="ListenService",
                 daemon=True,
                 args=(config,),
@@ -125,7 +125,7 @@ def main() -> None:
     if config.arducam.enabled:
         threads.append(
             threading.Thread(
-                target=arducam_service,
+                target=arducam_endpoint,
                 name="ArducamService",
                 daemon=True,
                 args=(config,),
@@ -135,7 +135,7 @@ def main() -> None:
     if config.d435if.enabled:
         threads.append(
             threading.Thread(
-                target=d435if_service,
+                target=d435if_endpoint,
                 name="D435iService",
                 daemon=True,
                 args=(config,),
@@ -145,7 +145,7 @@ def main() -> None:
     if config.d405.enabled:
         threads.append(
             threading.Thread(
-                target=d405_service,
+                target=d405_endpoint,
                 name="D405Service",
                 daemon=True,
                 args=(config,),

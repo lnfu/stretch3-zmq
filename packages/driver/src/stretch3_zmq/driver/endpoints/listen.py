@@ -1,4 +1,4 @@
-"""ASR service: receives requests, records audio, and returns transcribed text."""
+"""ASR endpoint: receives requests, records audio, and returns transcribed text."""
 
 import asyncio
 import logging
@@ -15,9 +15,9 @@ from .zmq_helpers import zmq_socket
 logger = logging.getLogger(__name__)
 
 
-def listen_service(config: DriverConfig) -> NoReturn:
+def listen_endpoint(config: DriverConfig) -> NoReturn:
     """
-    ASR service: Receives requests, records audio, and returns transcribed text.
+    ASR endpoint: Receives requests, records audio, and returns transcribed text.
 
     Listens on tcp://*:{ports.asr} using REP socket pattern.
     When a request is received, starts listening for speech and returns transcript.
@@ -34,10 +34,10 @@ def listen_service(config: DriverConfig) -> NoReturn:
     )
 
     with zmq_socket(zmq.REP, f"tcp://*:{config.ports.asr}") as socket:
-        logger.info(f"Listen service started. Listening on tcp://*:{config.ports.asr}")
+        logger.info(f"Listen endpoint started. Listening on tcp://*:{config.ports.asr}")
 
         async def transcribe() -> str:
-            """Create a new service instance and transcribe."""
+            """Create a new ASRService instance and transcribe."""
             service = ASRService(
                 provider=provider,
                 api_key=api_key,

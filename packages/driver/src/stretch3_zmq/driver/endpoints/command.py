@@ -1,4 +1,4 @@
-"""Command service: receives robot commands from ZeroMQ and executes them."""
+"""Command endpoint: receives robot commands from ZeroMQ and executes them."""
 
 import logging
 from collections.abc import Callable
@@ -16,9 +16,9 @@ from .zmq_helpers import zmq_socket
 logger = logging.getLogger(__name__)
 
 
-def command_service(config: DriverConfig, robot: StretchRobot) -> NoReturn:
+def command_endpoint(config: DriverConfig, robot: StretchRobot) -> NoReturn:
     """
-    Command service: Receives robot commands from ZeroMQ and executes them.
+    Command endpoint: Receives robot commands from ZeroMQ and executes them.
 
     Listens on tcp://*:{ports.command} using SUB socket pattern.
     Message format: [topic, timestamp, payload]
@@ -32,7 +32,7 @@ def command_service(config: DriverConfig, robot: StretchRobot) -> NoReturn:
         for topic in dispatch:
             socket.setsockopt_string(zmq.SUBSCRIBE, topic)
 
-        logger.info(f"Command service started. Listening on tcp://*:{config.ports.command}")
+        logger.info(f"Command endpoint started. Listening on tcp://*:{config.ports.command}")
 
         while True:
             try:
