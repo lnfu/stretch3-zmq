@@ -118,6 +118,7 @@ class ASRService:
         self,
         config: ASRConfig,
         timeout: float = 10.0,
+        microphone: str = "auto",
     ) -> str:
         """
         Record from microphone and transcribe until a sentence is detected.
@@ -125,11 +126,13 @@ class ASRService:
         Args:
             config: ASR configuration (language, model_id, etc.)
             timeout: Maximum seconds to wait for speech. Returns "" on timeout.
+            microphone: Device preference passed to Microphone — "auto", "default",
+                or a case-insensitive substring of the device name (e.g. "DJI MIC MINI").
 
         Returns:
             Transcribed text, or empty string if timeout.
         """
-        mic = Microphone()
+        mic = Microphone(device_preference=microphone)
         transcript = ""
 
         try:

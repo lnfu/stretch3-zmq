@@ -31,6 +31,7 @@ asr:
   timeout_seconds: 10.0
   language: zh-TW
   model_id: ~  # null = use provider default
+  microphone: "DJI MIC MINI"
 
 # Camera Settings
 arducam:

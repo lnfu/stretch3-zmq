@@ -44,7 +44,9 @@ def listen_endpoint(config: DriverConfig) -> NoReturn:
                 api_key=api_key,
             )
             return await service.transcribe_microphone(
-                asr_config, timeout=config.asr.timeout_seconds
+                asr_config,
+                timeout=config.asr.timeout_seconds,
+                microphone=config.asr.microphone,
             )
 
         while True:

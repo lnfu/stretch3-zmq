@@ -42,6 +42,7 @@ class ASRConfig(BaseModel):
     timeout_seconds: float = 10.0
     language: str = "en"
     model_id: str | None = None
+    microphone: str = "auto"  # "auto" | "default" | device name substring (e.g. "DJI MIC MINI")
 
 
 class ArducamConfig(BaseModel):

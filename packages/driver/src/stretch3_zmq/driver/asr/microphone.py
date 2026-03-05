@@ -1,7 +1,12 @@
 """Microphone input handler for 16 kHz mono audio capture.
 
-Prefers ReSpeaker 4 Mic Array when available; falls back to the system default
-input device so the module works on development machines without ReSpeaker.
+Device selection is controlled by the ``device_preference`` constructor argument:
+
+* ``"auto"``    — prefer ReSpeaker 4 Mic Array if present, otherwise the first
+                  hardware input device, otherwise the system default.
+* ``"default"`` — always use the system default input device.
+* Any other string — case-insensitive substring match against device names;
+                     falls back to the system default if no match is found.
 """
 
 import logging
@@ -34,7 +39,8 @@ class Microphone:
         mic.stop()
     """
 
-    def __init__(self) -> None:
+    def __init__(self, device_preference: str = "auto") -> None:
+        self._device_preference = device_preference
         self._audio_queue: queue.Queue[bytes] = queue.Queue()
         self._stream: sd.InputStream | None = None
         self._device_id: int | None = None
@@ -65,14 +71,42 @@ class Microphone:
         self._audio_queue.put(audio_bytes)
 
     @staticmethod
-    def _find_input_device() -> tuple[int | None, int]:
-        """Find the best available input device. Returns (device_id, channels)."""
+    def _find_input_device(preference: str = "auto") -> tuple[int | None, int]:
+        """Find the best available input device. Returns (device_id, channels).
+
+        Args:
+            preference: ``"auto"`` for heuristic selection, ``"default"`` for the
+                system default, or a case-insensitive substring of the device name.
+        """
         sd._initialize()
         devices = sd.query_devices()
 
-        hw_devices = [d for d in devices if d["max_input_channels"] > 0 and "hw:" in d["name"]]
+        def _default() -> tuple[int | None, int]:
+            dev = sd.query_devices(kind="input")
+            channels = max(1, min(dev["max_input_channels"], 2))
+            logger.info(f"Using default input device: {dev['name']} ({channels}ch)")
+            return None, channels
 
-        # Prefer ReSpeaker 4 Mic Array (hw:1,0)
+        if preference == "default":
+            return _default()
+
+        input_devices = [d for d in devices if d["max_input_channels"] > 0]
+
+        if preference != "auto":
+            # Substring match (case-insensitive) against device names
+            keyword = preference.lower()
+            matches = [d for d in input_devices if keyword in d["name"].lower()]
+            if matches:
+                dev = matches[0]
+                logger.info(f"Using microphone matching {preference!r}: {dev['name']}")
+                return cast(int, dev["index"]), dev["max_input_channels"]
+            logger.warning(
+                f"No device matching {preference!r} found; falling back to system default"
+            )
+            return _default()
+
+        # "auto": prefer ReSpeaker, then any hw: device, then system default
+        hw_devices = [d for d in input_devices if "hw:" in d["name"]]
         respeaker = [d for d in hw_devices if "ReSpeaker" in d["name"]]
         if respeaker:
             dev = respeaker[0]
@@ -84,15 +118,11 @@ class Microphone:
             logger.info(f"Using hardware input device: {dev['name']}")
             return cast(int, dev["index"]), dev["max_input_channels"]
 
-        # Fall back to system default input device (e.g. laptop built-in mic)
-        default_dev = sd.query_devices(kind="input")
-        channels = max(1, min(default_dev["max_input_channels"], 2))
-        logger.info(f"Using default input device: {default_dev['name']} ({channels}ch)")
-        return None, channels
+        return _default()
 
     def start(self) -> None:
         """Start recording from microphone."""
-        self._device_id, self._channels = self._find_input_device()
+        self._device_id, self._channels = self._find_input_device(self._device_preference)
         # Query the device's native sample rate; resample to SAMPLE_RATE if needed
         dev_info = (
             sd.query_devices(self._device_id)

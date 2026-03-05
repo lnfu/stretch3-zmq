@@ -15,7 +15,11 @@ logging.basicConfig(level=logging.INFO)
 
 
 async def listen_once(
-    provider: ASRProvider, language: str, model_id: str | None, timeout: float
+    provider: ASRProvider,
+    language: str,
+    model_id: str | None,
+    timeout: float,
+    microphone: str = "auto",
 ) -> str:
     """Listen for one sentence and return transcript."""
     load_dotenv()
@@ -29,7 +33,7 @@ async def listen_once(
     service = ASRService(provider=provider, api_key=api_key)
     asr_config = ASRConfig(language=language, model_id=model_id)
 
-    return await service.transcribe_microphone(asr_config, timeout=timeout)
+    return await service.transcribe_microphone(asr_config, timeout=timeout, microphone=microphone)
 
 
 def _list_devices() -> None:
@@ -68,6 +72,11 @@ def main() -> None:
         help="Max seconds to wait for speech (default: 10.0)",
     )
     parser.add_argument(
+        "--microphone",
+        default="auto",
+        help='Microphone device: "auto", "default", or a name substring (e.g. "DJI MIC MINI")',
+    )
+    parser.add_argument(
         "--list-devices",
         action="store_true",
         help="List available audio input devices and exit",
@@ -84,6 +93,7 @@ def main() -> None:
             language=args.language,
             model_id=args.model_id,
             timeout=args.timeout,
+            microphone=args.microphone,
         )
     )
     print(f"\n>>> {result}")
