@@ -24,7 +24,7 @@ class PortsConfig(BaseModel):
 
 
 class ServiceConfig(BaseModel):
-    status_rate_hz: float = 50.0
+    status_rate_hz: float = 15.0
 
 
 class TTSConfig(BaseModel):

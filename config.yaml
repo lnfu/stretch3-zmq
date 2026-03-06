@@ -13,7 +13,7 @@ ports:
 
 # Service Settings
 service:
-  status_rate_hz: 50.0
+  status_rate_hz: 15.0
 
 # TTS Settings
 tts:

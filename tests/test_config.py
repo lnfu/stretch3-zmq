@@ -23,7 +23,7 @@ class TestDriverConfig:
         config = DriverConfig()
         assert config.ports.status == 5555
         assert config.ports.command == 5556
-        assert config.service.status_rate_hz == 50.0
+        assert config.service.status_rate_hz == 15.0
         assert config.tts.provider == "fish_audio"
         assert config.asr.provider == "deepgram"
         assert not config.debug
@@ -97,7 +97,7 @@ class TestPortsConfig:
 class TestServiceConfig:
     def test_defaults(self) -> None:
         svc = ServiceConfig()
-        assert svc.status_rate_hz == 50.0
+        assert svc.status_rate_hz == 15.0
 
     def test_custom_rate(self) -> None:
         svc = ServiceConfig(status_rate_hz=100.0)
