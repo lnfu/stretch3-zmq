@@ -171,7 +171,7 @@ class TestExecuteCommandLogic:
         robot, inner = mock_robot
         positions = (0.0, 0.0, 0.0, 0.0, -0.5, 0.0, 0.0, 0.0, 0.0, 0.0)
         robot.execute_manipulator_command(ManipulatorCommand(joint_positions=positions))
-        inner.head.move_to.assert_any_call("head_pan", -0.5, v_r=7.0, a_r=14.0)
+        inner.head.move_to.assert_any_call("head_pan", -0.5, v_r=1.0, a_r=4.0)
 
     def test_head_tilt_command(self, mock_robot: tuple["StretchRobot", MagicMock]) -> None:
         robot, inner = mock_robot
