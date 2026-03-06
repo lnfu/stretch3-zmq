@@ -183,7 +183,7 @@ class TestExecuteCommandLogic:
         robot, inner = mock_robot
         positions = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
         robot.execute_manipulator_command(ManipulatorCommand(joint_positions=positions))
-        inner.end_of_arm.move_to.assert_any_call("wrist_yaw", 1.0, v_r=2.5, a_r=5.0)
+        inner.end_of_arm.move_to.assert_any_call("wrist_yaw", 1.0, v_r=0.75, a_r=1.5)
 
     def test_gripper_command(self, mock_robot: tuple["StretchRobot", MagicMock]) -> None:
         robot, inner = mock_robot

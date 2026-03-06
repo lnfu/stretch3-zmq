@@ -25,8 +25,8 @@ _JOINT_COMMANDS: list[Callable[[stretch_body.robot.Robot, float], None]] = [
     lambda r, v: r.arm.move_to(v, v_m=0.05, a_m=0.05),  # slow
     lambda r, v: r.head.move_to("head_pan", v, v_r=1.0, a_r=4.0),  # slow
     lambda r, v: r.head.move_to("head_tilt", v, v_r=3.0, a_r=8.0),  # default
-    lambda r, v: r.end_of_arm.move_to("wrist_yaw", v, v_r=2.5, a_r=5.0),  # fast
-    lambda r, v: r.end_of_arm.move_to("wrist_pitch", v, v_r=3.0, a_r=10.0),  # max
+    lambda r, v: r.end_of_arm.move_to("wrist_yaw", v, v_r=0.75, a_r=1.5),  # slow
+    lambda r, v: r.end_of_arm.move_to("wrist_pitch", v, v_r=1.0, a_r=4.0),  # slow
     lambda r, v: r.end_of_arm.move_to("wrist_roll", v, v_r=4.5, a_r=12.0),  # fast
     lambda r, v: r.end_of_arm.move_to("stretch_gripper", v, v_r=6.0, a_r=19.0),  # default
 ]
