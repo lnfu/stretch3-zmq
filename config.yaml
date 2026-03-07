@@ -55,5 +55,33 @@ d405:
   height: 480
   fps: 15
 
+# Trapezoid Motion Profile (velocity & acceleration limits per joint)
+# robot.py maps these to v_m/a_m (prismatic: lift, arm) or v_r/a_r (rotary: all others)
+trapezoid_profile:
+  lift:
+    v: 0.13
+    a: 0.25
+  arm:
+    v: 0.05
+    a: 0.05
+  head_pan:
+    v: 1.0
+    a: 4.0
+  head_tilt:
+    v: 3.0
+    a: 8.0
+  wrist_yaw:
+    v: 0.75
+    a: 1.5
+  wrist_pitch:
+    v: 1.0
+    a: 4.0
+  wrist_roll:
+    v: 1.0
+    a: 4.0
+  gripper:
+    v: 6.0
+    a: 19.0
+
 # Other Settings
 debug: false

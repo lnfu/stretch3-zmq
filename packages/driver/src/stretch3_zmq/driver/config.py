@@ -69,6 +69,26 @@ class D405Config(BaseModel):
     fps: int = 15
 
 
+class JointProfileConfig(BaseModel):
+    """Trapezoid motion profile for a single joint (v = max velocity, a = max acceleration)."""
+
+    v: float
+    a: float
+
+
+class TrapezoidProfileConfig(BaseModel):
+    # Prismatic joints (stretch_body uses v_m / a_m)
+    lift: JointProfileConfig = JointProfileConfig(v=0.13, a=0.25)
+    arm: JointProfileConfig = JointProfileConfig(v=0.05, a=0.05)
+    # Rotary joints (stretch_body uses v_r / a_r)
+    head_pan: JointProfileConfig = JointProfileConfig(v=1.0, a=4.0)
+    head_tilt: JointProfileConfig = JointProfileConfig(v=3.0, a=8.0)
+    wrist_yaw: JointProfileConfig = JointProfileConfig(v=0.75, a=1.5)
+    wrist_pitch: JointProfileConfig = JointProfileConfig(v=1.0, a=4.0)
+    wrist_roll: JointProfileConfig = JointProfileConfig(v=1.0, a=4.0)
+    gripper: JointProfileConfig = JointProfileConfig(v=6.0, a=19.0)
+
+
 class DriverConfig(BaseModel):
     ports: PortsConfig = PortsConfig()
     service: ServiceConfig = ServiceConfig()
@@ -77,6 +97,7 @@ class DriverConfig(BaseModel):
     arducam: ArducamConfig = ArducamConfig()
     d435if: D435ifConfig = D435ifConfig()
     d405: D405Config = D405Config()
+    trapezoid_profile: TrapezoidProfileConfig = TrapezoidProfileConfig()
     debug: bool = False
 
     @classmethod

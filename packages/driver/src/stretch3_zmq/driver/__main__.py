@@ -52,7 +52,7 @@ def main() -> None:
     from .control.robot import StretchRobot
 
     try:
-        robot_instance = StretchRobot()
+        robot_instance = StretchRobot(profile=config.trapezoid_profile)
     except Exception as e:
         logger.error(f"Failed to initialize robot: {e}")
         return

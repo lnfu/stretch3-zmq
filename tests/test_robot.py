@@ -98,11 +98,13 @@ def mock_robot() -> Iterator[tuple["StretchRobot", MagicMock]]:
     the MagicMock attribute-aliasing issue where sys.modules["stretch_body.robot"]
     and stretch_body.robot (as seen inside robot.py) are different objects.
     """
-    from stretch3_zmq.driver.control.robot import StretchRobot
+    from stretch3_zmq.driver.config import TrapezoidProfileConfig
+    from stretch3_zmq.driver.control.robot import StretchRobot, _build_joint_commands
 
     mock_inner = _make_mock_inner()
     robot = StretchRobot.__new__(StretchRobot)
     robot._robot = mock_inner
+    robot._joint_commands = _build_joint_commands(TrapezoidProfileConfig())
     yield robot, mock_inner
 
 

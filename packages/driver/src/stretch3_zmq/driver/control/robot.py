@@ -12,24 +12,33 @@ from stretch3_zmq.core.messages.pose_2d import Pose2D
 from stretch3_zmq.core.messages.status import IMU, Odometry, Status
 from stretch3_zmq.core.messages.twist_2d import Twist2D
 from stretch3_zmq.core.messages.vector_3d import Vector3D
+from stretch3_zmq.driver.config import TrapezoidProfileConfig
 
 logger = logging.getLogger(__name__)
 
-# Joint command mapping: index -> callable that executes the command
-# Order matches JointName enum and Command.joint_positions indices
-# TODO(lnfu) refactor presets (trapezoid profile)
-_JOINT_COMMANDS: list[Callable[[stretch_body.robot.Robot, float], None]] = [
-    lambda r, v: r.base.translate_by(v),
-    lambda r, v: r.base.rotate_by(v),
-    lambda r, v: r.lift.move_to(v, v_m=0.13, a_m=0.25),  # fast
-    lambda r, v: r.arm.move_to(v, v_m=0.05, a_m=0.05),  # slow
-    lambda r, v: r.head.move_to("head_pan", v, v_r=1.0, a_r=4.0),  # slow
-    lambda r, v: r.head.move_to("head_tilt", v, v_r=3.0, a_r=8.0),  # default
-    lambda r, v: r.end_of_arm.move_to("wrist_yaw", v, v_r=0.75, a_r=1.5),  # slow
-    lambda r, v: r.end_of_arm.move_to("wrist_pitch", v, v_r=1.0, a_r=4.0),  # slow
-    lambda r, v: r.end_of_arm.move_to("wrist_roll", v, v_r=1.0, a_r=4.0),  # slow
-    lambda r, v: r.end_of_arm.move_to("stretch_gripper", v, v_r=6.0, a_r=19.0),  # default
-]
+
+def _build_joint_commands(
+    profile: TrapezoidProfileConfig,
+) -> list[Callable[[stretch_body.robot.Robot, float], None]]:
+    """Build joint command callables from a trapezoid profile config."""
+    p = profile
+    return [
+        lambda r, v: r.base.translate_by(v),
+        lambda r, v: r.base.rotate_by(v),
+        # Prismatic joints: stretch_body expects v_m / a_m
+        lambda r, v: r.lift.move_to(v, v_m=p.lift.v, a_m=p.lift.a),
+        lambda r, v: r.arm.move_to(v, v_m=p.arm.v, a_m=p.arm.a),
+        # Rotary joints: stretch_body expects v_r / a_r
+        lambda r, v: r.head.move_to("head_pan", v, v_r=p.head_pan.v, a_r=p.head_pan.a),
+        lambda r, v: r.head.move_to("head_tilt", v, v_r=p.head_tilt.v, a_r=p.head_tilt.a),
+        lambda r, v: r.end_of_arm.move_to("wrist_yaw", v, v_r=p.wrist_yaw.v, a_r=p.wrist_yaw.a),
+        lambda r, v: r.end_of_arm.move_to(
+            "wrist_pitch", v, v_r=p.wrist_pitch.v, a_r=p.wrist_pitch.a
+        ),
+        lambda r, v: r.end_of_arm.move_to("wrist_roll", v, v_r=p.wrist_roll.v, a_r=p.wrist_roll.a),
+        lambda r, v: r.end_of_arm.move_to("stretch_gripper", v, v_r=p.gripper.v, a_r=p.gripper.a),
+    ]
+
 
 # Joint status reading: (status_path, pos_key, vel_key, effort_key)
 # Each entry defines how to extract position, velocity, and effort for a joint.
@@ -60,8 +69,9 @@ class StretchRobot:
     Handles low-level control using stretch_body.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, profile: TrapezoidProfileConfig | None = None) -> None:
         logger.info("Initializing StretchRobot...")
+        self._joint_commands = _build_joint_commands(profile or TrapezoidProfileConfig())
         self._robot = stretch_body.robot.Robot()
         if not self._robot.startup():
             logger.error("Failed to startup stretch robot")
@@ -93,7 +103,7 @@ class StretchRobot:
             return
 
         for i, (cmd_fn, value) in enumerate(
-            zip(_JOINT_COMMANDS, command.joint_positions, strict=True)
+            zip(self._joint_commands, command.joint_positions, strict=True)
         ):
             # TODO(lnfu): 這裡的判斷邏輯需要再想一下要不要移除
             # Skip base_translate (i=0) and base_rotate (i=1) if their values are 0.0
