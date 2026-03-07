@@ -141,7 +141,11 @@ def main() -> None:
             )
         )
 
+<<<<<<< HEAD
     # Camera endpoints (only if enabled)
+=======
+    # Camera services (only if enabled)
+>>>>>>> 4fa34dd (feat: image (rgb+depth) compression (blosc+lz4))
     if config.cameras.arducam.enabled:
         threads.append(
             threading.Thread(
