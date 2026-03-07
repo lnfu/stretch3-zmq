@@ -8,6 +8,7 @@ camera windows close cleanly even if the server stops sending frames.
 import argparse
 import time
 
+import blosc2
 import cv2
 import msgpack
 import numpy as np
@@ -26,6 +27,14 @@ CAMERA_RECV_TIMEOUT_MS = 5000
 # ---------------------------------------------------------------------------
 
 
+def _decompress(data: bytes) -> bytes:
+    """Decompress blosc2 data, or return as-is if not compressed."""
+    try:
+        return bytes(blosc2.decompress(data))
+    except Exception:
+        return data
+
+
 def _show_rgbd_frame(
     window_name: str,
     color_raw: bytes,
@@ -33,8 +42,8 @@ def _show_rgbd_frame(
     rotate_code: int | None = None,
 ) -> None:
     """Decode raw RGB-D buffers, colorize depth, and display side-by-side."""
-    color = np.frombuffer(color_raw, np.uint8).reshape(480, 640, 3)
-    depth = np.frombuffer(depth_raw, np.uint16).reshape(480, 640)
+    color = np.frombuffer(_decompress(color_raw), np.uint8).reshape(480, 640, 3)
+    depth = np.frombuffer(_decompress(depth_raw), np.uint16).reshape(480, 640)
 
     try:
         depth_vis = cv2.normalize(depth, None, 0, 255, cv2.NORM_MINMAX, dtype=cv2.CV_8U)
@@ -61,7 +70,7 @@ def _stream_arducam(socket: zmq.Socket) -> None:
             except zmq.Again:
                 print("\nArducam: no frame received (timeout).")
                 break
-            frame = np.frombuffer(raw, np.uint8).reshape(800, 1280, 3)
+            frame = np.frombuffer(_decompress(raw), np.uint8).reshape(720, 1280, 3)
             frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
             frame = cv2.flip(frame, 0)
             cv2.imshow("Arducam", frame)
