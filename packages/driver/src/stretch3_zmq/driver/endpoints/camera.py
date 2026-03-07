@@ -4,6 +4,8 @@ import logging
 import sys
 from typing import NoReturn
 
+import blosc2
+import numpy as np
 import zmq
 
 from stretch3_zmq.core.messages.protocol import encode_with_timestamp
@@ -14,6 +16,11 @@ from ..config import DriverConfig
 from .zmq_helpers import zmq_socket
 
 logger = logging.getLogger(__name__)
+
+
+def _compress(data: np.ndarray) -> bytes:
+    """Compress a numpy array with blosc2 + LZ4."""
+    return bytes(blosc2.compress(data.tobytes(), typesize=data.itemsize, codec=blosc2.Codec.LZ4))
 
 
 def _setup_camera_logger() -> None:
@@ -49,15 +56,16 @@ def arducam_endpoint(config: DriverConfig) -> NoReturn:
         _setup_camera_logger()
 
         logger.info(
-            f"Arducam starting: {config.arducam.device} @ "
-            f"{config.arducam.width}x{config.arducam.height} {config.arducam.fps}fps"
+            f"Arducam starting: {config.cameras.arducam.device} @ "
+            f"{config.cameras.arducam.width}x{config.cameras.arducam.height} "
+            "{config.cameras.arducam.fps}fps"
         )
 
         camera = ArducamCamera(
-            device=config.arducam.device,
-            width=config.arducam.width,
-            height=config.arducam.height,
-            fps=config.arducam.fps,
+            device=config.cameras.arducam.device,
+            width=config.cameras.arducam.width,
+            height=config.cameras.arducam.height,
+            fps=config.cameras.arducam.fps,
         )
         camera.start()
 
@@ -68,8 +76,12 @@ def arducam_endpoint(config: DriverConfig) -> NoReturn:
                 while True:
                     success, frame, _ = camera.read()
                     if success and frame is not None:
-                        parts = encode_with_timestamp(frame.tobytes())
-                        socket.send_multipart(parts)
+                        payload = (
+                            _compress(frame)
+                            if config.cameras.arducam.compressed
+                            else frame.tobytes()
+                        )
+                        socket.send_multipart(encode_with_timestamp(payload))
             finally:
                 camera.stop()
     except Exception as e:
@@ -77,7 +89,9 @@ def arducam_endpoint(config: DriverConfig) -> NoReturn:
         raise
 
 
-def _realsense_endpoint(camera: RealSenseCamera, port: int, name: str) -> NoReturn:
+def _realsense_endpoint(
+    camera: RealSenseCamera, port: int, name: str, compressed: bool
+) -> NoReturn:
     """
     RealSense endpoint: Publishes color and depth frames to ZeroMQ.
 
@@ -98,13 +112,11 @@ def _realsense_endpoint(camera: RealSenseCamera, port: int, name: str) -> NoRetu
                 while True:
                     success, color_frame, depth_frame = camera.read()
                     if success and color_frame is not None:
-                        socket.send_multipart(
-                            [b"rgb", *encode_with_timestamp(color_frame.tobytes())]
-                        )
+                        payload = _compress(color_frame) if compressed else color_frame.tobytes()
+                        socket.send_multipart([b"rgb", *encode_with_timestamp(payload)])
                     if success and depth_frame is not None:
-                        socket.send_multipart(
-                            [b"depth", *encode_with_timestamp(depth_frame.tobytes())]
-                        )
+                        payload = _compress(depth_frame) if compressed else depth_frame.tobytes()
+                        socket.send_multipart([b"depth", *encode_with_timestamp(payload)])
             finally:
                 camera.stop()
     except Exception as e:
@@ -116,21 +128,21 @@ def d435if_endpoint(config: DriverConfig) -> NoReturn:
     """D435i endpoint: Publishes color and depth frames to ZeroMQ."""
     camera = RealSenseCamera(
         name="D435i",
-        width=config.d435if.width,
-        height=config.d435if.height,
-        fps=config.d435if.fps,
-        serial=config.d435if.serial,
+        width=config.cameras.d435if.width,
+        height=config.cameras.d435if.height,
+        fps=config.cameras.d435if.fps,
+        serial=config.cameras.d435if.serial,
     )
-    _realsense_endpoint(camera, config.ports.d435if, "D435i")
+    _realsense_endpoint(camera, config.ports.d435if, "D435i", config.cameras.d435if.compressed)
 
 
 def d405_endpoint(config: DriverConfig) -> NoReturn:
     """D405 endpoint: Publishes color and depth frames to ZeroMQ."""
     camera = RealSenseCamera(
         name="D405",
-        width=config.d405.width,
-        height=config.d405.height,
-        fps=config.d405.fps,
-        serial=config.d405.serial,
+        width=config.cameras.d405.width,
+        height=config.cameras.d405.height,
+        fps=config.cameras.d405.fps,
+        serial=config.cameras.d405.serial,
     )
-    _realsense_endpoint(camera, config.ports.d405, "D405")
+    _realsense_endpoint(camera, config.ports.d405, "D405", config.cameras.d405.compressed)

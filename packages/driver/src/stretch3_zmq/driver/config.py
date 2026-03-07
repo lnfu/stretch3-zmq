@@ -47,6 +47,7 @@ class ASRConfig(BaseModel):
 
 class ArducamConfig(BaseModel):
     enabled: bool = False
+    compressed: bool = False
     device: str = "/dev/video4"
     width: int = 1280
     height: int = 720
@@ -55,6 +56,7 @@ class ArducamConfig(BaseModel):
 
 class D435ifConfig(BaseModel):
     enabled: bool = False
+    compressed: bool = False
     serial: str | None = None
     width: int = 640
     height: int = 480
@@ -63,6 +65,7 @@ class D435ifConfig(BaseModel):
 
 class D405Config(BaseModel):
     enabled: bool = False
+    compressed: bool = False
     serial: str | None = None
     width: int = 640
     height: int = 480
@@ -89,14 +92,18 @@ class TrapezoidProfileConfig(BaseModel):
     gripper: JointProfileConfig = JointProfileConfig(v=6.0, a=19.0)
 
 
+class CamerasConfig(BaseModel):
+    arducam: ArducamConfig = ArducamConfig()
+    d435if: D435ifConfig = D435ifConfig()
+    d405: D405Config = D405Config()
+
+
 class DriverConfig(BaseModel):
     ports: PortsConfig = PortsConfig()
     service: ServiceConfig = ServiceConfig()
     tts: TTSConfig = TTSConfig()
     asr: ASRConfig = ASRConfig()
-    arducam: ArducamConfig = ArducamConfig()
-    d435if: D435ifConfig = D435ifConfig()
-    d405: D405Config = D405Config()
+    cameras: CamerasConfig = CamerasConfig()
     trapezoid_profile: TrapezoidProfileConfig = TrapezoidProfileConfig()
     debug: bool = False
 

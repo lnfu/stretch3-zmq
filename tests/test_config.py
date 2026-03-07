@@ -190,21 +190,23 @@ class TestD405Config:
 class TestDriverConfigFromYaml:
     def test_camera_sections_loaded(self) -> None:
         data = {
-            "arducam": {"enabled": True, "device": "/dev/video0"},
-            "d435if": {"enabled": True, "serial": "abc123"},
-            "d405": {"enabled": True, "fps": 10},
+            "cameras": {
+                "arducam": {"enabled": True, "device": "/dev/video0"},
+                "d435if": {"enabled": True, "serial": "abc123"},
+                "d405": {"enabled": True, "fps": 10},
+            }
         }
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             yaml.dump(data, f)
             f.flush()
 
             config = DriverConfig.from_yaml(f.name)
-            assert config.arducam.enabled is True
-            assert config.arducam.device == "/dev/video0"
-            assert config.d435if.enabled is True
-            assert config.d435if.serial == "abc123"
-            assert config.d405.enabled is True
-            assert config.d405.fps == 10
+            assert config.cameras.arducam.enabled is True
+            assert config.cameras.arducam.device == "/dev/video0"
+            assert config.cameras.d435if.enabled is True
+            assert config.cameras.d435if.serial == "abc123"
+            assert config.cameras.d405.enabled is True
+            assert config.cameras.d405.fps == 10
 
     def test_partial_ports_override(self) -> None:
         data = {"ports": {"tts": 7000, "asr": 7001}}

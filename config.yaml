@@ -34,26 +34,30 @@ asr:
   microphone: "DJI MIC MINI"
 
 # Camera Settings
-arducam:
-  enabled: true
-  device: "/dev/video6"  # Arducam OV9782 USB Camera
-  width: 1280
-  height: 720
-  fps: 30
+cameras:
+  arducam:
+    enabled: true
+    compressed: true
+    device: "/dev/video6"  # Arducam OV9782 USB Camera
+    width: 1280
+    height: 720
+    fps: 30
 
-d435if:
-  enabled: true
-  serial: "239722074251"  # D435I serial number
-  width: 640
-  height: 480
-  fps: 30
+  d435if:
+    enabled: true
+    compressed: true
+    serial: "239722074251"  # D435I serial number
+    width: 640
+    height: 480
+    fps: 30
 
-d405:
-  enabled: true
-  serial: "218622277115"  # D405 serial number
-  width: 640
-  height: 480
-  fps: 15
+  d405:
+    enabled: true
+    compressed: true
+    serial: "218622277115"  # D405 serial number
+    width: 640
+    height: 480
+    fps: 15
 
 # Trapezoid Motion Profile (velocity & acceleration limits per joint)
 # robot.py maps these to v_m/a_m (prismatic: lift, arm) or v_r/a_r (rotary: all others)

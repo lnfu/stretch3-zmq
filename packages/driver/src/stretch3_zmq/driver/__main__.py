@@ -122,7 +122,7 @@ def main() -> None:
         )
 
     # Camera services (only if enabled)
-    if config.arducam.enabled:
+    if config.cameras.arducam.enabled:
         threads.append(
             threading.Thread(
                 target=arducam_endpoint,
@@ -132,7 +132,7 @@ def main() -> None:
             )
         )
 
-    if config.d435if.enabled:
+    if config.cameras.d435if.enabled:
         threads.append(
             threading.Thread(
                 target=d435if_endpoint,
@@ -142,7 +142,7 @@ def main() -> None:
             )
         )
 
-    if config.d405.enabled:
+    if config.cameras.d405.enabled:
         threads.append(
             threading.Thread(
                 target=d405_endpoint,
@@ -165,11 +165,11 @@ def main() -> None:
         logger.info(f"  - Speak service: tcp://*:{config.ports.tts} (REP)")
     if config.asr.enabled:
         logger.info(f"  - Listen service: tcp://*:{config.ports.asr} (REP)")
-    if config.arducam.enabled:
+    if config.cameras.arducam.enabled:
         logger.info(f"  - Arducam service: tcp://*:{config.ports.arducam} (PUB)")
-    if config.d435if.enabled:
+    if config.cameras.d435if.enabled:
         logger.info(f"  - D435i service: tcp://*:{config.ports.d435if} (PUB, topics: rgb/depth)")
-    if config.d405.enabled:
+    if config.cameras.d405.enabled:
         logger.info(f"  - D405 service: tcp://*:{config.ports.d405} (PUB, topics: rgb/depth)")
 
     try:
