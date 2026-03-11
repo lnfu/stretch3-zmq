@@ -157,9 +157,23 @@ class StretchRobot:
                 "are non-zero. Only one can be non-zero at a time."
             )
         if twist.linear != 0.0:
-            self._robot.base.translate_by(twist.linear)
+            # TODO(lntu) custom v_m, a_m?
+            self._robot.base.translate_by(
+                twist.linear,
+                v_m=self._robot.base.params["motion"]["max"]["vel_m"],
+                a_m=self._robot.base.params["motion"]["max"]["accel_m"],
+            )
         if twist.angular != 0.0:
-            self._robot.base.rotate_by(twist.angular)
+            # TODO(lntu) custom v_r, a_r?
+            self._robot.base.rotate_by(
+                twist.angular,
+                v_r=self._robot.base.translation_to_rotation(
+                    self._robot.base.params["motion"]["max"]["vel_m"]
+                ),
+                a_r=self._robot.base.translation_to_rotation(
+                    self._robot.base.params["motion"]["max"]["accel_m"]
+                ),
+            )
         self._robot.push_command()
         self._robot.wait_command(timeout=100.0)  # blocking # TODO(lnfu)
 

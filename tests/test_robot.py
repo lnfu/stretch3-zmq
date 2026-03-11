@@ -320,7 +320,8 @@ class TestGotoLogic:
 
         robot, inner = mock_robot
         robot.goto(Twist2D(linear=0.5, angular=0.0))
-        inner.base.translate_by.assert_called_once_with(0.5)
+        args, kwargs = inner.base.translate_by.call_args
+        assert args == (0.5,) and "v_m" in kwargs and "a_m" in kwargs
         inner.base.rotate_by.assert_not_called()
         inner.push_command.assert_called_once()
         inner.wait_command.assert_called_once()
@@ -332,7 +333,8 @@ class TestGotoLogic:
 
         robot, inner = mock_robot
         robot.goto(Twist2D(linear=0.0, angular=0.3))
-        inner.base.rotate_by.assert_called_once_with(0.3)
+        args, kwargs = inner.base.rotate_by.call_args
+        assert args == (0.3,) and "v_r" in kwargs and "a_r" in kwargs
         inner.base.translate_by.assert_not_called()
         inner.push_command.assert_called_once()
         inner.wait_command.assert_called_once()
