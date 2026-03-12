@@ -66,8 +66,8 @@ trapezoid_profile:
     v: 0.13
     a: 0.25
   arm:
-    v: 0.05
-    a: 0.05
+    v: 0.14
+    a: 0.14
   head_pan:
     v: 1.0
     a: 4.0
@@ -75,17 +75,17 @@ trapezoid_profile:
     v: 3.0
     a: 8.0
   wrist_yaw:
-    v: 0.75
-    a: 1.5
+    v: 2.0
+    a: 5.0
   wrist_pitch:
-    v: 1.0
-    a: 4.0
+    v: 2.0
+    a: 8.0
   wrist_roll:
-    v: 1.0
-    a: 4.0
+    v: 3.0
+    a: 10.0
   gripper:
-    v: 6.0
-    a: 19.0
+    v: 8.0
+    a: 10.0
 
 # Other Settings
 debug: false
