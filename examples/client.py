@@ -270,7 +270,7 @@ def main() -> None:
     parser.add_argument("--command-port", type=int, default=5556, help="Command port")
     parser.add_argument("--goto-port", type=int, default=5557, help="Goto port")
     parser.add_argument("--tts-port", type=int, default=6101, help="TTS port")
-    parser.add_argument("--asr-port", type=int, default=6102, help="ASR port")
+    parser.add_argument("--asr-port", type=int, default=6103, help="ASR port")
     parser.add_argument("--arducam-port", type=int, default=6000, help="Arducam port")
     parser.add_argument("--d435if-port", type=int, default=6001, help="D435if port")
     parser.add_argument("--d405-port", type=int, default=6002, help="D405 port")
