@@ -67,6 +67,7 @@ def arducam_endpoint(config: DriverConfig) -> NoReturn:
             height=config.cameras.arducam.height,
             fps=config.cameras.arducam.fps,
         )
+
         camera.start()
 
         with zmq_socket(zmq.PUB, f"tcp://*:{config.ports.arducam}") as socket:
@@ -115,8 +116,9 @@ def _realsense_endpoint(
                         payload = _compress(color_frame) if compressed else color_frame.tobytes()
                         socket.send_multipart([b"rgb", *encode_with_timestamp(payload)])
                     if success and depth_frame is not None:
-                        payload = _compress(depth_frame) if compressed else depth_frame.tobytes()
-                        socket.send_multipart([b"depth", *encode_with_timestamp(payload)])
+                        socket.send_multipart(
+                            [b"depth", *encode_with_timestamp(depth_frame.tobytes())]
+                        )
             finally:
                 camera.stop()
     except Exception as e:
