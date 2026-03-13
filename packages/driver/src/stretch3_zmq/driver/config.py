@@ -106,7 +106,6 @@ class DriverConfig(BaseModel):
     asr: ASRConfig = ASRConfig()
     cameras: CamerasConfig = CamerasConfig()
     trapezoid_profile: TrapezoidProfileConfig = TrapezoidProfileConfig()
-    debug: bool = False
 
     @classmethod
     def from_yaml(cls, path: Path | str | None = None) -> "DriverConfig":

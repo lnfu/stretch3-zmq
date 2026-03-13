@@ -26,7 +26,6 @@ class TestDriverConfig:
         assert config.service.status_rate_hz == 15.0
         assert config.tts.provider == "fish_audio"
         assert config.asr.provider == "deepgram"
-        assert not config.debug
 
     def test_from_yaml_none_returns_default(self) -> None:
         config = DriverConfig.from_yaml(None)
@@ -40,7 +39,6 @@ class TestDriverConfig:
         data = {
             "ports": {"status": 9999},
             "tts": {"provider": "elevenlabs"},
-            "debug": True,
         }
         with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             yaml.dump(data, f)
@@ -49,7 +47,6 @@ class TestDriverConfig:
             config = DriverConfig.from_yaml(f.name)
             assert config.ports.status == 9999
             assert config.tts.provider == "elevenlabs"
-            assert config.debug is True
             # Unspecified fields should use defaults
             assert config.ports.command == 5556
 

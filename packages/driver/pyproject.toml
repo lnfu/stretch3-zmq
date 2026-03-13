@@ -32,10 +32,11 @@ dependencies = [
     "pin>=3.9.0",
     "blosc2>=2.0.0",
     "pin>=3.9.0",
+    "typer>=0.24.1",
 ]
 
 [project.scripts]
-stretch3-zmq-driver = "stretch3_zmq.driver.__main__:main"
+stretch3-zmq-driver = "stretch3_zmq.driver.__main__:cli"
 
 [tool.uv.sources]
 stretch3-zmq-core = { workspace = true }

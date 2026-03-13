@@ -41,6 +41,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/c1/0c/7aa5e4fdfc8353a06374ae768d9bd8f3d8109c5f1d6829906ba16fdd1a2d/aioserial-1.3.1.tar.gz", hash = "sha256:702bf03b0eb84b8ef2d8dac5cb925e1e685dce98f77b125569bc6fd2b3b58228", size = 9608, upload-time = "2022-07-25T02:18:40.793Z" }
 
 [[package]]
+name = "annotated-doc"
+version = "0.0.4"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/57/ba/046ceea27344560984e26a590f90bc7f4a75b06701f653222458922b558c/annotated_doc-0.0.4.tar.gz", hash = "sha256:fbcda96e87e9c92ad167c2e53839e57503ecfda18804ea28102353485033faa4", size = 7288, upload-time = "2025-11-10T22:07:42.062Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1e/d3/26bf1008eb3d2daa8ef4cacc7f3bfdc11818d111f7e2d0201bc6e3b49d45/annotated_doc-0.0.4-py3-none-any.whl", hash = "sha256:571ac1dc6991c450b25a9c2d84a3705e2ae7a53467b5d111c24fa8baabbed320", size = 5303, upload-time = "2025-11-10T22:07:40.673Z" },
+]
+
+[[package]]
 name = "annotated-types"
 version = "0.7.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2027,7 +2036,7 @@ name = "pexpect"
 version = "4.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ptyprocess" },
+    { name = "ptyprocess", marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/42/92/cc564bf6381ff43ce1f4d06852fc19a2f11d180f23dc32d9588bee2f149d/pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f", size = 166450, upload-time = "2023-11-25T09:07:26.339Z" }
 wheels = [
@@ -2760,6 +2769,15 @@ wheels = [
 ]
 
 [[package]]
+name = "shellingham"
+version = "1.5.4"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/58/15/8b3609fd3830ef7b27b655beb4b4e9c62313a4e8da8c676e142cc210d58e/shellingham-1.5.4.tar.gz", hash = "sha256:8dbca0739d487e5bd35ab3ca4b36e11c4078f3a234bfce294b0a0291363404de", size = 10310, upload-time = "2023-10-24T04:13:40.426Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e0/f9/0595336914c5619e5f28a1fb793285925a8cd4b432c9da0a987836c7f822/shellingham-1.5.4-py2.py3-none-any.whl", hash = "sha256:7ecfff8f2fd72616f7481040475a65b2bf8af90a56c89140852d1120324e8686", size = 9755, upload-time = "2023-10-24T04:13:38.866Z" },
+]
+
+[[package]]
 name = "six"
 version = "1.17.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2893,6 +2911,7 @@ dependencies = [
     { name = "scipy" },
     { name = "sounddevice" },
     { name = "stretch3-zmq-core" },
+    { name = "typer" },
     { name = "urchin" },
     { name = "websockets" },
 ]
@@ -2915,6 +2934,7 @@ requires-dist = [
     { name = "scipy", specifier = ">=1.17.0" },
     { name = "sounddevice", specifier = ">=0.4.6" },
     { name = "stretch3-zmq-core", editable = "packages/core" },
+    { name = "typer", specifier = ">=0.24.1" },
     { name = "urchin", specifier = ">=0.0.30" },
     { name = "websockets", specifier = "==12.0" },
 ]
@@ -3047,6 +3067,21 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/b7/b4/0e8efaa1786a0bbcacb00d014f424bb0e3109fa5ea39fd2c377815fcd5c6/trimesh-4.4.7.tar.gz", hash = "sha256:e6619c70c99006d41f175bd5e1ba2c8c3dfdb00c2b41d65059917942e2f6971a", size = 780891, upload-time = "2024-08-20T18:18:48.007Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/96/ec/785b0cb0e290552591c69aecc6f32113f5bdd41c47aeabf3ead9a5c3e623/trimesh-4.4.7-py3-none-any.whl", hash = "sha256:6df98f3f5b971945b416f567b7ff6ee0c51b70f01b80a16a990fdcceb8dbd114", size = 696221, upload-time = "2024-08-20T18:18:45.908Z" },
+]
+
+[[package]]
+name = "typer"
+version = "0.24.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "annotated-doc" },
+    { name = "click" },
+    { name = "rich" },
+    { name = "shellingham" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f5/24/cb09efec5cc954f7f9b930bf8279447d24618bb6758d4f6adf2574c41780/typer-0.24.1.tar.gz", hash = "sha256:e39b4732d65fbdcde189ae76cf7cd48aeae72919dea1fdfc16593be016256b45", size = 118613, upload-time = "2026-02-21T16:54:40.609Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/4a/91/48db081e7a63bb37284f9fbcefda7c44c277b18b0e13fbc36ea2335b71e6/typer-0.24.1-py3-none-any.whl", hash = "sha256:112c1f0ce578bfb4cab9ffdabc68f031416ebcc216536611ba21f04e9aa84c9e", size = 56085, upload-time = "2026-02-21T16:54:41.616Z" },
 ]
 
 [[package]]

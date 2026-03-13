@@ -1,9 +1,11 @@
 """Main entry point that orchestrates all Stretch3-ZMQ Driver endpoints."""
 
-import argparse
 import logging
 import threading
+from pathlib import Path
+from typing import Annotated
 
+import typer
 from dotenv import load_dotenv
 
 from .config import DriverConfig
@@ -31,13 +33,14 @@ def thread_exception_hook(args: threading.ExceptHookArgs) -> None:
     )
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Stretch3-ZMQ Driver")
-    parser.add_argument("--config", type=str, help="Path to config.yaml")
-    args = parser.parse_args()
-
+def main(
+    config_path: Annotated[
+        Path | None, typer.Option("--config", help="Path to config.yaml")
+    ] = None,
+    debug: Annotated[bool, typer.Option("--debug", help="Enable debug logging")] = False,
+) -> None:
     # Load configuration
-    config = DriverConfig.from_yaml(args.config)
+    config = DriverConfig.from_yaml(config_path)
 
     load_dotenv()
 
@@ -68,11 +71,12 @@ def main() -> None:
 
     # Add our own clean handler
     console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.DEBUG if config.debug else logging.INFO)
+    log_level = logging.DEBUG if debug else logging.INFO
+    console_handler.setLevel(log_level)
     formatter = logging.Formatter("[%(levelname)s] [%(name)s]: %(message)s")
     console_handler.setFormatter(formatter)
     root_logger.addHandler(console_handler)
-    root_logger.setLevel(logging.DEBUG if config.debug else logging.INFO)
+    root_logger.setLevel(log_level)
 
     logger.info("Logging reconfigured after robot initialization")
 
@@ -190,5 +194,9 @@ def main() -> None:
         logger.info("Shutting down Stretch3-ZMQ Driver...")
 
 
+def cli() -> None:
+    typer.run(main)
+
+
 if __name__ == "__main__":
-    main()
+    cli()

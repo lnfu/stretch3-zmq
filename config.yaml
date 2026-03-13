@@ -86,6 +86,3 @@ trapezoid_profile:
   gripper:
     v: 8.0
     a: 10.0
-
-# Other Settings
-debug: false
