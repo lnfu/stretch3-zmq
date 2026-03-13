@@ -108,14 +108,6 @@ def main() -> None:
             args=(config, robot_instance),
         )
     )
-    threads.append(
-        threading.Thread(
-            target=servo_endpoint,
-            name="ServoEndpoint",
-            daemon=True,
-            args=(config, robot_instance),
-        )
-    )
 
     # TTS/ASR endpoints (only if enabled)
     if config.tts.enabled:
