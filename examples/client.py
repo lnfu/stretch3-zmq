@@ -162,7 +162,7 @@ def _handle_command(cmd_socket: zmq.Socket, args_str: str) -> None:
             positions = tuple(float(p) for p in args_str.split())
         else:
             print("No positions provided. Using default dummy positions.")
-            positions = (0.0, 0.5, 0.2, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0)
+            positions = (0.0, 0.0, 0.29, 0.0, 0.0, 0.0, 3.0, 0.0, 0.0, 100.0)
 
         parts = [
             b"manipulator",
@@ -182,8 +182,8 @@ def _handle_base_command(cmd_socket: zmq.Socket, args_str: str) -> None:
     try:
         tokens = args_str.split()
         if len(tokens) < 1:
-            print("Usage: base <x> [y] [theta] [velocity|position]")
-            print("Example: base 0.3 0.0 0.0 velocity\n")
+            print("Usage: base <linear> [angular] [velocity|position]")
+            print("Example: base 0.3 0.0 velocity\n")
             return
 
         mode = "velocity"
@@ -191,17 +191,16 @@ def _handle_base_command(cmd_socket: zmq.Socket, args_str: str) -> None:
             mode = tokens.pop()
 
         floats = [float(t) for t in tokens]
-        x = floats[0] if len(floats) > 0 else 0.0
-        y = floats[1] if len(floats) > 1 else 0.0
-        theta = floats[2] if len(floats) > 2 else 0.0
+        linear = floats[0] if len(floats) > 0 else 0.0
+        angular = floats[1] if len(floats) > 1 else 0.0
 
-        command = BaseCommand(mode=mode, twist=Twist2D(linear=x, angular=theta))
+        command = BaseCommand(mode=mode, twist=Twist2D(linear=linear, angular=angular))
         parts = [b"base", *encode_with_timestamp(command.to_bytes())]
         cmd_socket.send_multipart(parts)
-        print(f"Sent base command: x={x} y={y} theta={theta} mode={mode}\n")
+        print(f"Sent base command: linear={linear} angular={angular} mode={mode}\n")
     except ValueError as e:
         print(f"Invalid input: {e}")
-        print("Usage: base <x> [y] [theta] [velocity|position]\n")
+        print("Usage: base <linear> [angular] [velocity|position]\n")
     except Exception as e:
         print(f"Error sending base command: {e}\n")
 
@@ -291,7 +290,7 @@ Commands:
   tts <text>                        Send text to TTS
   asr                               Start listening for speech
   command <p0>...<p9>               Send manipulator command (10 joint positions)
-  base <x> [y] [theta] [mode]       Send base command (mode: velocity|position)
+  base <linear> [angular] [mode]    Send base command (mode: velocity|position)
   goto linear <m>                   Blocking base translate (metres)
   goto angular <rad>                Blocking base rotate (radians)
   servo [dx dy dz qx qy qz qw g]   Send EE delta pose + gripper (all optional, default=identity/0.5)
