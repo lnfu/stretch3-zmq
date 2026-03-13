@@ -47,7 +47,7 @@ Ports can be overridden in `config.yaml` under the `ports:` key.
 
 - **Address:** `tcp://*:5555`
 - **Pattern:** PUB
-- **Rate:** `config.service.status_rate_hz` (default: 50 Hz)
+- **Rate:** `config.service.status_rate_hz` (default: 15 Hz)
 - **Model:** [`Status`](../packages/core/src/stretch3_zmq/core/messages/status.py)
 
 Continuously publishes the full robot state. No subscription topic is required; subscribers
@@ -207,8 +207,12 @@ Publishes RGB frames from the Arducam OV9782 USB camera (default: 1280×720 @ 30
 
 ```
 [0] timestamp  — 8 bytes, nanoseconds since epoch
-[1] payload    — raw RGB frame bytes (numpy ndarray.tobytes())
+[1] payload    — frame bytes (see below)
 ```
+
+`payload` encoding depends on `cameras.arducam.compressed` in `config.yaml`:
+- `false` (default): raw bytes (`ndarray.tobytes()`)
+- `true`: blosc2 + LZ4 compressed bytes
 
 ---
 
@@ -226,8 +230,12 @@ Subscribers should filter by topic.
 ```
 [0] topic      — b"rgb" or b"depth"
 [1] timestamp  — 8 bytes, nanoseconds since epoch
-[2] payload    — raw frame bytes (numpy ndarray.tobytes())
+[2] payload    — frame bytes (see below)
 ```
+
+`payload` encoding depends on `cameras.d435if.compressed` in `config.yaml`:
+- `false` (default): raw bytes (`ndarray.tobytes()`)
+- `true`: blosc2 + LZ4 compressed bytes (applies to both rgb and depth)
 
 ---
 
@@ -245,8 +253,12 @@ Same message format as d435if.
 ```
 [0] topic      — b"rgb" or b"depth"
 [1] timestamp  — 8 bytes, nanoseconds since epoch
-[2] payload    — raw frame bytes (numpy ndarray.tobytes())
+[2] payload    — frame bytes (see below)
 ```
+
+`payload` encoding depends on `cameras.d405.compressed` in `config.yaml`:
+- `false` (default): raw bytes (`ndarray.tobytes()`)
+- `true`: blosc2 + LZ4 compressed bytes (applies to both rgb and depth)
 
 ---
 

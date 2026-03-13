@@ -116,9 +116,8 @@ def _realsense_endpoint(
                         payload = _compress(color_frame) if compressed else color_frame.tobytes()
                         socket.send_multipart([b"rgb", *encode_with_timestamp(payload)])
                     if success and depth_frame is not None:
-                        socket.send_multipart(
-                            [b"depth", *encode_with_timestamp(depth_frame.tobytes())]
-                        )
+                        payload = _compress(depth_frame) if compressed else depth_frame.tobytes()
+                        socket.send_multipart([b"depth", *encode_with_timestamp(payload)])
             finally:
                 camera.stop()
     except Exception as e:
