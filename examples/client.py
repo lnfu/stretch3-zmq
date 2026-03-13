@@ -399,7 +399,7 @@ def main() -> None:
                 print("Unknown command. Type a command from the list above.\n")
 
     finally:
-        context.term()
+        context.destroy(linger=0)
 
 
 if __name__ == "__main__":
